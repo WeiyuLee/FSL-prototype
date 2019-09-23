@@ -4,6 +4,7 @@ import sys
 sys.path.append('./utility')
 
 import tensorflow as tf
+from tqdm import tqdm
 import numpy as np
 import scipy.misc
 import random
@@ -12,6 +13,8 @@ from utils import log10
 import netfactory as nf
 
 import model_zoo
+
+from tensorflow.examples.tutorials.mnist import input_data
 
 class model(object):
 
@@ -98,7 +101,7 @@ class model(object):
             self.test_dataset = self.data_ob.test_data_list
             
         self.model_list = ["cifar10_alexnet_att", "BCL", "BCL_att", "BCL_att_v2", "BCL_att_v3", "BCL_att_v4", "BCL_att_GAN", 
-                           "AD_att_GAN", "AD_att_GAN_v2", "AD_att_VAE", "AD_att_VAE_WEAK", "AD_att_VAE_GAN", "AD_att_AE_GAN", "AD_att_AE_GAN_3DCode"]
+                           "AD_att_GAN", "AD_att_GAN_v2", "AD_att_VAE", "AD_att_VAE_WEAK", "AD_att_VAE_GAN", "AD_att_AE_GAN", "AD_att_AE_GAN_3DCode", "RaGAN_MNIST"]
 
     def build_model(self):###              
         if self.model_ticket not in self.model_list:
@@ -4179,6 +4182,150 @@ class model(object):
                 
             print(np.shape(output))
             np.savetxt(output_name, output, delimiter=",")
+
+    def build_RaGAN_MNIST(self):###
+        """
+        Build SRCNN model
+        """        
+        # Define input and label images
+        self.image_input = tf.random_normal([self.batch_size, 128], name='input')  
+        self.image_target = tf.placeholder(tf.float32, [self.batch_size, 28*28*1], name='labels')
+        
+        # Initial model_zoo
+        mz = model_zoo.model_zoo(self.image_input, dropout=self.dropout, is_training=self.is_training, model_ticket=self.model_ticket)        
+        
+        ### Build model       
+        gen_f = mz.build_model({"net":"Gen", "reuse":False})
+        dis_t = mz.build_model({"net":"Dis", "d_inputs":self.image_target, "reuse":False})
+        dis_f = mz.build_model({"net":"Dis", "d_inputs":gen_f, "reuse":True})
+
+        #### WGAN-GP ####
+        # Calculate gradient penalty
+        self.epsilon = epsilon = tf.random_uniform([self.batch_size, 1], 0.0, 1.0)
+        x_hat = epsilon * self.image_target + (1. - epsilon) * (gen_f)
+        d_hat = mz.build_model({"net":"Dis", "d_inputs":x_hat, "reuse":True})
+        
+        d_gp = tf.gradients(d_hat, [x_hat])[0]
+        d_gp = tf.sqrt(tf.reduce_sum(tf.square(d_gp), axis=1))
+        d_gp = tf.reduce_mean((d_gp - 1.0)**2) * 10
+
+        real_logit = (dis_t - tf.reduce_mean(dis_f))
+        fake_logit = (dis_f - tf.reduce_mean(dis_t))
+
+        disc_ture_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(dis_t), logits=real_logit))
+        disc_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(dis_f), logits=fake_logit))
+
+        self.d_loss = disc_fake_loss + disc_ture_loss + d_gp           
+
+        gen_ture_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(dis_t), logits=real_logit))
+        gen_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(dis_f), logits=fake_logit))
+        
+        self.g_loss = gen_fake_loss + gen_ture_loss 
+
+        train_variables = tf.trainable_variables()
+        generator_variables = [v for v in train_variables if v.name.startswith("gen")]
+        discriminator_variables = [v for v in train_variables if v.name.startswith("dis")]
+        self.train_d = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.d_loss, var_list=discriminator_variables)
+        self.train_g = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.g_loss, var_list=generator_variables)
+        
+        self.g_output = gen_f
+        
+        with tf.name_scope('train_summary'):
+            
+            tf.summary.scalar("d_loss", self.d_loss, collections=['train'])
+            tf.summary.scalar("g_loss", self.g_loss, collections=['train'])
+            tf.summary.scalar("dis_f_mean", tf.reduce_mean(dis_f), collections=['train'])
+            tf.summary.scalar("dis_t_mean", tf.reduce_mean(dis_t), collections=['train'])
+            tf.summary.image("target_image", tf.reshape(self.image_target, [self.batch_size, 28, 28, 1]), collections=['train'])
+            tf.summary.image("output_image", tf.reshape(gen_f, [self.batch_size, 28, 28, 1]), collections=['train'])
+    
+            self.merged_summary_train = tf.summary.merge_all('train')          
+
+        with tf.name_scope('test_summary'):
+
+            tf.summary.scalar("d_loss", self.d_loss, collections=['test'])
+            tf.summary.scalar("g_loss", self.g_loss, collections=['test'])
+            tf.summary.image("target_image", tf.reshape(self.image_target, [self.batch_size, 28, 28, 1]), collections=['test'])
+            tf.summary.image("output_image", tf.reshape(gen_f, [self.batch_size, 28, 28, 1]), collections=['test'])
+        
+            self.merged_summary_test = tf.summary.merge_all('test')                 
+        
+        self.saver = tf.train.Saver()
+
+        
+    def train_RaGAN_MNIST(self):
+        """
+        Training process.
+        """     
+        print("Training...")
+
+        # Define dataset path
+        mnist = input_data.read_data_sets("/data/wei/dataset/MNIST_data/", one_hot=True)
+        print("...")
+        log_dir = os.path.join(self.log_dir, self.ckpt_name, "log")
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+            
+        with tf.Session() as sess:                    
+            
+            summary_writer = tf.summary.FileWriter(log_dir, sess.graph)    
+        
+            sess.run(tf.global_variables_initializer())
+                
+            # Define iteration counter, learning rate...
+            itera_counter = 0
+            learning_rate = self.learn_rate_init
+    
+            epoch_pbar = tqdm(range(0, self.max_iters))
+            for ep in epoch_pbar:            
+                # Run by batch images
+                idxs = 1000
+    
+                epoch_pbar.set_description("Step: [%2d], lr:%f" % ((ep+1), learning_rate))
+                epoch_pbar.refresh()
+            
+                batch_pbar = tqdm(range(0, idxs), desc="Batch: [0]")
+    
+                for idx in batch_pbar:                
+                    batch_pbar.set_description("Batch: [%2d]" % ((idx+1)))
+                    itera_counter += 1
+                    
+                    mnist_img, _ = mnist.train.next_batch(self.batch_size)
+                                      
+                    for d_iter in range(0, 5):
+                        _, d_loss, g_loss \
+                        = sess.run([self.train_d, self.d_loss, self.g_loss],
+                                                                                 feed_dict={   
+                                                                                             self.image_target: mnist_img,
+                                                                                             self.dropout_rate: 1.,
+                                                                                             self.lr:learning_rate
+                                                                                           })
+                    
+                    _ = sess.run([self.train_g], 
+                                                       feed_dict={
+                                                                   self.image_target: mnist_img,
+                                                                   self.dropout_rate: 1.,
+                                                                   self.lr:learning_rate 
+                                                                 })
+                
+                print("EP:[{}], d_loss = [{}], g_loss = [{}]\n".format(ep, d_loss, g_loss))
+        
+                if ep % 5 == 0 and ep != 0:
+                    
+                    train_sum = sess.run(self.merged_summary_train, 
+                                                                        feed_dict={
+                                                                                    self.image_target: mnist_img,
+                                                                                    self.dropout_rate: 1.
+                                                                                  })
+                    
+                    test_sum, g_output = sess.run([self.merged_summary_test, self.g_output],
+                                                                         feed_dict={
+                                                                                     self.image_target: mnist_img,
+                                                                                     self.dropout_rate: 1.,
+                                                                                   })
+                                                                                                                                      
+                    summary_writer.add_summary(train_sum, ep)
+                    summary_writer.add_summary(test_sum, ep)                
 
 
     def _read_by_function(self, filename):

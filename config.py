@@ -352,7 +352,36 @@ class config:
         #common_config["is_training"] = False
         
         common_config["restore_model"] = False
-        common_config["restore_step"] = 2000      
+        common_config["restore_step"] = 0      
+
+    def RaGAN_MNIST_config(self):
+        
+        # Train config 
+        common_config = self.config["common"]        
+        common_config["batch_size"] = 64
+        common_config["max_iters"] = 60000
+        common_config["learn_rate_init"] = 0.001
+        common_config["repeat"] = 10000
+        common_config["dropout"] = 0
+
+        common_config["model_ticket"] = "RaGAN_MNIST" 
+  
+        common_config["ckpt_name"] = "RaGAN_MNIST_v1"
+        
+        common_config["train_data_path"] = None
+        common_config["valid_data_path"] = None
+        common_config["anomaly_data_path"] = None   
+        common_config["test_data_path"] = [None, None]
+
+        common_config["ckpt_dir"] = "/data/wei/model/FSL/FSL-prototype/" + common_config["ckpt_name"]      
+        common_config["test_ckpt"] = []
+        common_config["train_ckpt"] = [] 
+        common_config["log_dir"] = "/data/wei/model/FSL/FSL-prototype/log/" + common_config["ckpt_name"]                         
+        common_config["is_training"] = True
+        #common_config["is_training"] = False
+        
+        common_config["restore_model"] = False
+        common_config["restore_step"] = 0     
         
     def Temp_att_config(self):
         

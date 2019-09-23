@@ -15,7 +15,7 @@ class model_zoo:
     def build_model(self, kwargs = {}):
 
         model_list = ["cifar10_alexnet_att", "BCL", "BCL_att", "BCL_att_v2", "BCL_att_v3", "BCL_att_v4", "BCL_att_GAN", 
-                      "AD_att_GAN", "AD_att_GAN_v2", "AD_att_VAE", "AD_att_VAE_WEAK", "AD_att_VAE_GAN", "AD_att_AE_GAN", "AD_att_AE_GAN_3DCode"]
+                      "AD_att_GAN", "AD_att_GAN_v2", "AD_att_VAE", "AD_att_VAE_WEAK", "AD_att_VAE_GAN", "AD_att_AE_GAN", "AD_att_AE_GAN_3DCode", "RaGAN_MNIST"]
         
         if self.model_ticket not in model_list:
             print("sorry, wrong ticket!")
@@ -1939,6 +1939,73 @@ class model_zoo:
                 print("cls_fc_5: %s" % cls_fc_5.get_shape())                  
                 
                 return cls_fc_5           
+
+    def RaGAN_MNIST(self, kwargs):
+
+        reuse = kwargs["reuse"]
+        
+        net = kwargs["net"]
+        
+        DEPTH = 28
+        OUTPUT_SIZE = 28
+        batch_size = tf.shape(self.inputs)[0]
+
+        model_params = {
+                
+                "g_fc_1": 2*2*8*DEPTH,
+                "g_deconv_1": [5,5,4*DEPTH],
+                "g_deconv_2": [5,5,2*DEPTH],
+                "g_deconv_3": [5,5,1*DEPTH],
+                "g_deconv_4": [5,5,1],
+
+                "d_conv_1": [5,5,1*DEPTH],
+                "d_conv_2": [5,5,2*DEPTH],
+                "d_conv_3": [5,5,4*DEPTH],
+                "d_fc_1": 1,
+        }
+                
+        if net is "Gen":
+        
+            ###Generator
+            g_input = self.inputs
+            with tf.variable_scope("gen", reuse=reuse):     
+
+                noise = g_input
+
+                g_fc_1 = nf.fc_layer(noise, model_params["g_fc_1"], name="g_fc_1", activat_fn=tf.nn.relu)
+                g_fc_1 = tf.reshape(g_fc_1, [batch_size, 2, 2, 8*DEPTH])
+                       
+                g_deconv_1 = nf.deconvolution_layer(g_fc_1, model_params["g_deconv_1"], [batch_size, 4, 4, 4*DEPTH], [1,2,2,1], name="g_deconv_1", padding='SAME', activat_fn=tf.nn.relu)
+        
+                g_deconv_2 = nf.deconvolution_layer(g_deconv_1, model_params["g_deconv_2"], [batch_size, 7, 7, 2*DEPTH], [1,2,2,1], name="g_deconv_2", padding='SAME', activat_fn=tf.nn.relu)        
+        
+                g_deconv_3 = nf.deconvolution_layer(g_deconv_2, model_params["g_deconv_3"], [batch_size, 14, 14, DEPTH], [1,2,2,1], name="g_deconv_3", padding='SAME', activat_fn=tf.nn.relu)                
+        
+                g_deconv_4 = nf.deconvolution_layer(g_deconv_3, model_params["g_deconv_4"], [batch_size, OUTPUT_SIZE, OUTPUT_SIZE, 1], [1,2,2,1], name="g_deconv_4", padding='SAME', activat_fn=tf.nn.sigmoid)                        
+                
+                return tf.reshape(g_deconv_4, [-1, 784])           
+
+        elif net is "Dis":
+            
+            d_inputs = kwargs["d_inputs"]
+            
+            ###Discriminator
+            input_gan = d_inputs 
+            with tf.variable_scope("dis", reuse=reuse):     
+                
+                input_gan = tf.reshape(input_gan, [-1, 28, 28, 1])
+
+                d_conv_1 = nf.convolution_layer(input_gan, model_params["d_conv_1"], [1,2,2,1], name="d_conv_1", padding='SAME', activat_fn=nf.lrelu)
+        
+                d_conv_2 = nf.convolution_layer(d_conv_1, model_params["d_conv_2"], [1,2,2,1], name="d_conv_2", padding='SAME', activat_fn=nf.lrelu)
+        
+                d_conv_3 = nf.convolution_layer(d_conv_2, model_params["d_conv_3"], [1,2,2,1], name="d_conv_3", padding='SAME', activat_fn=nf.lrelu)
+               
+                chanel = d_conv_3.get_shape().as_list()
+                output = tf.reshape(d_conv_3, [batch_size, chanel[1]*chanel[2]*chanel[3]])
+                output = nf.fc_layer(output, model_params["d_fc_1"], name="d_fc_1", activat_fn=None)
+                
+                return output
         
 def unit_test():
 
