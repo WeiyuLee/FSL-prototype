@@ -220,8 +220,10 @@ class config:
 
         #common_config["model_ticket"] = "AD_att_VAE" 
         #common_config["model_ticket"] = "AD_att_VAE_WEAK" 
-        common_config["model_ticket"] = "AD_att_VAE_GAN" 
-  
+        #common_config["model_ticket"] = "AD_att_VAE_GAN" 
+        #common_config["model_ticket"] = "AD_att_AE_GAN" 
+        common_config["model_ticket"] = "AD_att_AE_GAN_3DCode" 
+
         #common_config["ckpt_name"] = "AD_att_VAE_v1"
         #common_config["ckpt_name"] = "AD_att_VAE_v1_code_256"
         #common_config["ckpt_name"] = "AD_att_VAE_v1_code_256_iter_5"
@@ -270,13 +272,42 @@ class config:
         #common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_CodeD1"
         #common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_CodeD1_seperate"
         #common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_CodeD1_seperate_bn"
-        common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_CodeD1_seperate_bn_2"
+        #common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_CodeD1_seperate_bn_2"
+        #common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_CodeD1_seperate_bn_3"
+        #common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_CodeD1_seperate_bn_CodeWoATT"
+        #common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_seperate_bn_CodeWoATT"
+        #common_config["ckpt_name"] = "AD_att_VAE_GAN_v7_RaGAN_R1_D50_seperate_bn_CodeWoATT_WEAK"
         
-        common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_train_class_9.p"
-        common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p"
-        common_config["anomaly_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_5.p"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_v1_R1_D50"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_v1_R50_D1"
+        #common_config["ckpt_name"] = "AD_AE_GAN_v1_R50_D1"
+        #common_config["ckpt_name"] = "AD_AE_GAN_v1_R50_D1_2"
+        #common_config["ckpt_name"] = "AD_AE_GAN_v2_R50_D1"
+        #common_config["ckpt_name"] = "AD_AE_v1_R50"
+        #common_config["ckpt_name"] = "AD_AE_v1_128_R50"
+        #common_config["ckpt_name"] = "AD_AE_GAN_v1_128_R50"       
+        #common_config["ckpt_name"] = "AD_AE_v1_64_R50"
+        #common_config["ckpt_name"] = "AD_AE_GAN_v1_512_R50"
+        #common_config["ckpt_name"] = "AD_AE_GAN_v1_512_R50_10cls"
+        #common_config["ckpt_name"] = "AD_AE_GAN_v1_512_R50_C10_10cls"
+        #common_config["ckpt_name"] = "AD_AE_GAN_v1_512_R50_C50_10cls"
+
+        #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_v1_512_R50_C10_10cls"        
+        #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_v1_512_R50_C50_10cls"        
+        #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_v1_512_R50_C1_10cls"        
+        #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_v1_512_R50_C75_10cls"        
         
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_9.p"
+        #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_v2_512_R50_C1_10cls"    # encoder2 + cls 
+        #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_v2_512_R50_C10_10cls"    # encoder2 + cls 
+        
+        #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_v3_512_R50_C1_10cls"    # encoder2: f_code - t_code_2 
+        common_config["ckpt_name"] = "AD_AE_GAN_3DCode_v3_512_R50_C10_10cls"  # encoder2: f_code - t_code_2
+        
+        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_train_class_9.p"
+        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p"
+        common_config["anomaly_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p"
+        
+        common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_9.p"
         #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_8.p"
         #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_7.p"
         #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_6.p"
@@ -287,7 +318,7 @@ class config:
         #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_1.p"
         #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_0.p"
     
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_9.p"
+        common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_9.p"
         #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_8.p"
         #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_7.p"
         #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_6.p"
@@ -298,7 +329,7 @@ class config:
         #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_1.p"
         #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_0.p"
         
-        common_config["test_data_path"] = ["/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p", "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_5.p"]
+        common_config["test_data_path"] = ["/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p", "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_7.p"]
         
         #common_config["test_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed/test.p"
         #common_config["test_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed/preprocess_train_9.p"
@@ -314,14 +345,14 @@ class config:
         #common_config["test_data_path"] = ["/home/sdc1/dataset/FSL/Cifar-10/preprocessed/test.p", "/home/sdc1/dataset/FSL/Cifar-10/preprocessed/preprocess_train_0.p"]
         
         common_config["ckpt_dir"] = "/home/sdc1/model/FSL/FSL-prototype/" + common_config["ckpt_name"]      
-        common_config["test_ckpt"] = "/home/sdc1/model/FSL/FSL-prototype/AD_att_VAE_GAN_v5_RaGAN_D50_CodeD1/best_performance/AD_att_VAE_GAN_v5_RaGAN_D50_CodeD1-8000"                
-        common_config["train_ckpt"] = [] 
+        common_config["test_ckpt"] = "/home/sdc1/model/FSL/FSL-prototype/AD_AE_GAN_v1_R50_D1_2/AD_AE_GAN_v1_R50_D1_2-60000"                
+        common_config["train_ckpt"] = "/home/sdc1/model/FSL/FSL-prototype/AD_AE_GAN_3DCode_v1_512_R50_C50_10cls/AD_AE_GAN_3DCode_v1_512_R50_C50_10cls-2000"
         common_config["log_dir"] = "/home/sdc1/model/FSL/FSL-prototype/log/" + common_config["ckpt_name"]                         
         common_config["is_training"] = True
         #common_config["is_training"] = False
         
         common_config["restore_model"] = False
-        common_config["restore_step"] = 0      
+        common_config["restore_step"] = 2000      
         
     def Temp_att_config(self):
         

@@ -103,7 +103,7 @@ if __name__ == "__main__":
         
         for path in test_data_path:
         
-            cb_ob = InputData(None, None, path)
+            cb_ob = InputData(None, None, None, path)
     
             MODEL = model(  batch_size=batch_size, 
                             max_iters=max_iters, 
