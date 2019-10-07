@@ -4,8 +4,10 @@ import numpy as np
 import scipy
 import scipy.misc
 import pickle
+import random
 
 import tensorflow as tf
+import cv2
 
 def log10(x):
     numerator = tf.log(x)
@@ -98,10 +100,8 @@ class InputData(object):
     def __init__(self, train_images_path, valid_images_path, anomaly_images_path, test_images_path):
 
         self.dataname = "InputData"
-        self.dims = 64 * 64
-        self.shape = [32, 32, 3]
-        self.image_size = 32
-        self.channel = 3
+        self.image_size = 0
+        self.channel = 0
         self.train_images_path = train_images_path
         self.test_images_path = test_images_path
         self.train_data_list = self.load_input_pickle(train_images_path)
@@ -121,7 +121,54 @@ class InputData(object):
 
         features, labels = pickle.load(open(pickle_path, mode='rb'))
         
+        self.image_size = np.shape(features)[1]
+        self.channel = np.shape(features)[-1]
+
         return (features, labels)
+
+class InputAllClassData(object):
+    def __init__(self, anoCls, train_images_path, valid_images_path, anomaly_images_path, test_images_path):
+
+        self.dataname = "InputData"
+        self.image_size = 0
+        self.channel = 0
+        self.train_images_path = train_images_path
+        self.test_images_path = test_images_path
+        self.train_data_dict = self.load_class_data(anoCls, train_images_path, 'train')
+        self.valid_data_dict = self.load_class_data(anoCls, valid_images_path, 'test')
+        self.anomaly_data_list = self.load_input_pickle(anomaly_images_path)
+        self.test_data_list = self.load_input_pickle(test_images_path)
+
+    def load_input(self, images_path):
+
+        # get the list of image path
+        return read_image_path(images_path)
+
+    def load_input_pickle(self, pickle_path):
+            
+        if pickle_path==None:
+            return None
+
+        features, labels = pickle.load(open(pickle_path, mode='rb'))
+        
+        self.image_size = np.shape(features)[1]
+        self.channel = np.shape(features)[-1]
+
+        return (features, labels)
+    
+    def load_class_data(self, anoCls, dir_path, data_type):
+        
+        cls_dict = {}
+                
+        for i in range(0, 10):
+            
+            if i == anoCls:
+                continue
+            
+            pickle_path = dir_path + "/pr_" + data_type + "_class_" + str(i) + ".p"
+            cls_dict[i] = self.load_input_pickle(pickle_path)
+            
+        return cls_dict
 
 def read_image_list_file(category, is_test):
     end_num = 0
@@ -179,5 +226,54 @@ def read_image_path(path):
 
     return list_image
     
+def reshape_image(input, size):
+    
+    width, height, channel = size
+    
+    temp_x = np.empty((len(input), width, height, channel))
+    
+    for i, e in enumerate(input):
+        temp_x[i] = cv2.resize(e, (width, height))
 
+    return temp_x
 
+def get_batch(data, batch_size, anoCls, class_num=10):
+    
+    sample_num = batch_size // (class_num-1)
+    rdm_idx = np.array(list(range(0, len(data[0][0]))))
+    batch_data = np.array([])
+    batch_label = np.array([])
+    
+    for i in range(0, class_num):
+        
+        if i == anoCls:
+            continue
+        
+        random.shuffle(rdm_idx)
+        
+        temp_data = data[i][0][rdm_idx[0:sample_num]]        
+        temp_label = data[i][1][rdm_idx[0:sample_num]]        
+
+        batch_data = np.append(batch_data, temp_data)
+        batch_label = np.append(batch_label, temp_label)
+
+    batch_data = np.reshape(batch_data, tuple([-1, np.shape(temp_data)[1], np.shape(temp_data)[2], np.shape(temp_data)[3]]))
+    batch_label = np.reshape(batch_label, tuple([-1, np.shape(temp_label)[1]]))
+    
+    rest_sample = batch_size % (class_num-1)
+    if rest_sample != 0:
+   
+        random.shuffle(rdm_idx)
+        while True:
+            rdm_cls = random.randint(0, class_num-1)
+            if rdm_cls != anoCls:
+                break
+
+        temp_data = data[rdm_cls][0][rdm_idx[0:rest_sample]]        
+        temp_label = data[rdm_cls][1][rdm_idx[0:rest_sample]]             
+
+        batch_data = np.append(batch_data, temp_data, axis=0)
+        batch_label = np.append(batch_label, temp_label, axis=0)
+        
+    return batch_data, batch_label        
+    

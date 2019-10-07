@@ -6,7 +6,7 @@ sys.path.append('./utility')
 
 from utils import mkdir_p
 from model import model
-from utils import CelebA, InputData
+from utils import CelebA, InputData, InputAllClassData
 import config
 import argparse
 
@@ -52,6 +52,7 @@ if __name__ == "__main__":
     
     learn_rate_init = conf["learn_rate_init"]
     
+    anoCls = conf["anomaly_class"]
 
     print("===================================================================")
     if is_training == True:
@@ -76,7 +77,8 @@ if __name__ == "__main__":
     
     if is_training == True:               
         
-        cb_ob = InputData(conf["train_data_path"], conf["valid_data_path"], conf["anomaly_data_path"], None)
+        #cb_ob = InputData(conf["train_data_path"], conf["valid_data_path"], conf["anomaly_data_path"], None)
+        cb_ob = InputAllClassData(conf["anomaly_class"], conf["train_cls_data_path"], conf["valid_cls_data_path"], conf["anomaly_data_path"], None)
 
         MODEL = model(  batch_size=batch_size, 
                         max_iters=max_iters, 
@@ -86,6 +88,7 @@ if __name__ == "__main__":
                         data_ob=cb_ob, 
                         log_dir=root_log_dir, 
                         learnrate_init=learn_rate_init,
+                        anoCls=anoCls,
                         ckpt_name=ckpt_name,
                         test_ckpt=test_ckpt,
                         train_ckpt=train_ckpt,

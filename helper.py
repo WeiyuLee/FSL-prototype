@@ -73,7 +73,7 @@ def _preprocess_and_save(normalize, one_hot_encode, features, labels, filename):
     pickle.dump((features, labels), open(filename, 'wb'))
 
 
-def preprocess_and_save_data(cifar10_dataset_folder_path, output_path, rm_class, aug_enable):
+def preprocess_and_save_data(cifar10_dataset_folder_path, output_path, rm_class, aug_enable, reshape_enable):
     """
     Preprocess Training and Validation Data
     """
@@ -101,6 +101,9 @@ def preprocess_and_save_data(cifar10_dataset_folder_path, output_path, rm_class,
         features = np.concatenate((features, features_ud, features_lr))
         labels = np.concatenate((labels, labels, labels))
 
+    if reshape_enable==True:
+        features = preprc.reshape_image(features, (64, 64, 3))    
+
     features, _, _ = preprc.normalize(features, mean=mean, std=std)
     labels = preprc.one_hot_encode(labels)
           
@@ -121,7 +124,7 @@ def preprocess_and_save_data(cifar10_dataset_folder_path, output_path, rm_class,
     print("\t[After] label shape: ", np.shape(labels))
     
     # Save training data
-    pickle.dump((features, labels), open(os.path.join(output_path, 'preprocess_train_{}.p'.format(rm_class)), 'wb'))
+    pickle.dump((features, labels), open(os.path.join(output_path, 'preprocess_train_{}.p'.format(rm_class)), 'wb'), protocol=4)
 
     with open(cifar10_dataset_folder_path + '/test_batch', mode='rb') as file:
         batch = pickle.load(file, encoding='latin1')
@@ -129,6 +132,9 @@ def preprocess_and_save_data(cifar10_dataset_folder_path, output_path, rm_class,
     # load the test data
     test_features = batch['data'].reshape((len(batch['data']), 3, 32, 32)).transpose(0, 2, 3, 1)
     test_labels = batch['labels']
+
+    if reshape_enable==True:
+        test_features = preprc.reshape_image(test_features, (64, 64, 3))    
 
     # Preprocess training & validation data
     test_features, _, _ = preprc.normalize(test_features, mean=mean, std=std)
@@ -154,9 +160,9 @@ def preprocess_and_save_data(cifar10_dataset_folder_path, output_path, rm_class,
     print("\t[After] label shape: ", np.shape(test_labels))
 
     # Save test data
-    pickle.dump((np.array(test_features), np.array(test_labels)), open(os.path.join(output_path, 'preprocess_test_{}.p'.format(rm_class)), 'wb'))
+    pickle.dump((np.array(test_features), np.array(test_labels)), open(os.path.join(output_path, 'preprocess_test_{}.p'.format(rm_class)), 'wb'), protocol=4)
 
-def preprocess_and_save_single_class_data(cifar10_dataset_folder_path, output_path, aug_enable):
+def preprocess_and_save_single_class_data(cifar10_dataset_folder_path, output_path, aug_enable, reshape_enable):
     """
     Preprocess Training and Validation Data
     """
@@ -184,6 +190,9 @@ def preprocess_and_save_single_class_data(cifar10_dataset_folder_path, output_pa
         features = np.concatenate((features, features_ud, features_lr))
         labels = np.concatenate((labels, labels, labels))
 
+    if reshape_enable==True:
+        features = preprc.reshape_image(features, (64, 64, 3)) 
+
     features, _, _ = preprc.normalize(features, mean=mean, std=std)
     labels = preprc.one_hot_encode(labels)
     
@@ -205,6 +214,9 @@ def preprocess_and_save_single_class_data(cifar10_dataset_folder_path, output_pa
     # load the test data
     test_features = batch['data'].reshape((len(batch['data']), 3, 32, 32)).transpose(0, 2, 3, 1)
     test_labels = batch['labels']
+
+    if reshape_enable==True:
+        test_features = preprc.reshape_image(test_features, (64, 64, 3))    
 
     # Preprocess training & validation data
     test_features, _, _ = preprc.normalize(test_features, mean=mean, std=std)
@@ -276,13 +288,13 @@ def display_image_predictions(features, labels, predictions):
 
 cifar10_dataset_folder_path = "/home/sdc1/dataset/FSL/Cifar-10/cifar-10-batches-py"
 tar_gz_path = "/home/sdc1/dataset/FSL/Cifar-10/cifar-10-python.tar.gz"
-output_path = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed/"
+output_path = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug_64x64/"
 
 # Download the CIFAR-10 dataset if not exist.
 DL.process(cifar10_dataset_folder_path, tar_gz_path)
 
-preprocess_and_save_single_class_data(cifar10_dataset_folder_path, output_path, aug_enable=True)
+preprocess_and_save_single_class_data(cifar10_dataset_folder_path, output_path, aug_enable=True, reshape_enable=True)
 
 #for i in range(0, 10):
 #    # Preprocess Training, Validation, and Testing Data
-#    preprocess_and_save_data(cifar10_dataset_folder_path, output_path, i, aug_enable=False)        
+#    preprocess_and_save_data(cifar10_dataset_folder_path, output_path, i, aug_enable=True, reshape_enable=True)        

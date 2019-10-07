@@ -7,6 +7,7 @@ Created on Thu Aug 10 14:30:43 2017
 """
 
 import numpy as np
+import cv2
 
 def horizontal_flip(data):
     # image shape: [batch, 32, 32, 3]  ***[begin:end:step]
@@ -53,3 +54,14 @@ def one_hot_encode(x):
         output[i,j] = 1
            
     return output
+
+def reshape_image(input, size):
+    
+    width, height, channel = size
+    
+    temp_x = np.empty((len(input), width, height, channel))
+    
+    for i, e in enumerate(input):
+        temp_x[i] = cv2.resize(e, (width, height))
+
+    return temp_x
