@@ -232,7 +232,8 @@ class config:
         #common_config["model_ticket"] = "AD_att_AE_GAN" 
         #common_config["model_ticket"] = "AD_att_AE_GAN_3DCode" 
         #common_config["model_ticket"] = "AD_att_AE_GAN_3DCode_32x32"
-        common_config["model_ticket"] = "AD_att_AE_GAN_CLS"
+        #common_config["model_ticket"] = "AD_att_AE_GAN_CLS"
+        common_config["model_ticket"] = "AD_att_AE_GAN_CLS_DISE"
 
         #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_ATTmap"
         #common_config["ckpt_name"] = "AD_AE_GAN_3DCode_ATTmap_v2"
@@ -254,9 +255,11 @@ class config:
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v3"
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise"
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_38cls"
-        common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_25cls"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_25cls"
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_10cls"
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_5cls"
+        
+        common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_DISE_v1_25cls_25floss"
         
         common_config["anomaly_class"] = 9
         

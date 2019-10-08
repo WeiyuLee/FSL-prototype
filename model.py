@@ -109,7 +109,7 @@ class model(object):
             
         self.model_list = ["cifar10_alexnet_att", "AD_att_GAN", "AD_att_GAN_v2", "AD_att_VAE", "AD_att_VAE_WEAK", "AD_att_VAE_GAN", "AD_att_AE_GAN", 
                            "AD_att_AE_GAN_3DCode", "AD_att_AE_GAN_3DCode_32x32", 
-                           "AD_att_AE_GAN_CLS",
+                           "AD_att_AE_GAN_CLS", "AD_att_AE_GAN_CLS_DISE",
                            "GANomaly", "RaGAN_MNIST"]
 
     def build_model(self):###              
@@ -3671,6 +3671,421 @@ class model(object):
             print("Best loss: {}".format(best_loss))
 
     def test_AD_att_AE_GAN_CLS(self):
+
+        init = tf.global_variables_initializer()
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+
+        with tf.Session(config=config) as sess:
+           
+            # Initialzie the iterator
+            #sess.run(self.testing_init_op)
+
+            sess.run(init)
+            print("Restore model: {}".format(self.test_ckpt))
+            self.saver.restore(sess, self.test_ckpt)            
+ 
+            output_name = os.path.basename(self.data_ob.test_images_path)
+            output_name = os.path.splitext(output_name)[0] + ".csv"
+            print("Output: {}".format(output_name))
+            
+            output = np.array([])
+            
+            curr_idx = 0
+            while True:
+                
+                try:
+                    #next_x_images, next_test_y = sess.run(self.next_test_x)
+                    
+                    if curr_idx >= len(self.test_dataset[0]):
+                        break
+                    
+                    next_x_images = self.test_dataset[0][curr_idx:curr_idx+self.batch_size]
+                    next_test_y = self.test_dataset[1][curr_idx:curr_idx+self.batch_size]
+                    curr_idx = curr_idx + self.batch_size
+                    
+                except tf.errors.OutOfRangeError:
+                    break
+                
+
+                f_code, t_code_2, decoder_output = sess.run([self.f_code, self.t_code_2, self.decoder_output], 
+                                                                      feed_dict=
+                                                                                  {self.images: next_x_images, 
+                                                                                   self.labels: next_test_y, 
+                                                                                   self.dropout_rate: 0})
+    
+                f_code = np.reshape(f_code, (np.shape(next_x_images)[0], -1))
+                t_code_2 = np.reshape(t_code_2, (np.shape(next_x_images)[0], -1))   
+                an_score = np.mean(abs(f_code-t_code_2), axis=-1, keepdims=True)
+                
+                for idx in range(len(decoder_output)):
+                    scipy.misc.imsave("./output_image/" + "decode_" + str(idx) + '.png', decoder_output[idx])
+                    scipy.misc.imsave("./output_image/" + "encode_" + str(idx) + '.png', next_x_images[idx])
+    
+                #dis_pred = np.expand_dims(dis_pred, 1)
+                
+                next_test_y = np.argmax(next_test_y, axis=-1)
+                next_test_y = np.expand_dims(next_test_y, 1)
+                
+                curr_output = np.concatenate((next_test_y, an_score, t_code_2, f_code), axis=1)
+                output = np.vstack([output, curr_output]) if output.size else curr_output
+                
+            print(np.shape(output))
+            np.savetxt(output_name, output, delimiter=",")
+
+    def build_AD_att_AE_GAN_CLS_DISE(self):
+       
+        # Initial model_zoo
+        mz = model_zoo.model_zoo(self.images, dropout=self.dropout, is_training=self.is_training, model_ticket=self.model_ticket)        
+        
+        ### Build model       
+        # Encoder
+        self.t_code, self.t_conv_1, self.t_conv_2, self.t_conv_3 = mz.build_model({"mode":"encoder", "en_input":self.images, "reuse":False})       
+
+        # Code
+        self.z1 = tf.gather(self.t_code, tf.range(0, 16), axis=-1)
+        self.z2 = tf.gather(self.t_code, tf.range(16, 32), axis=-1)
+
+        # Decoder        
+        self.decoder_output = mz.build_model({"mode":"decoder", "code":self.t_code, "reuse":False})      
+        
+        # Code Disentangle =======================================================================================================
+        code_dis_logits = mz.build_model({"mode":"code_cls", "code_cls_input":self.z1, "reuse":False})  
+          
+        self.code_dis_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=code_dis_logits, labels=self.labels))
+        self.code_dis_pred = tf.argmax(tf.nn.softmax(code_dis_logits), axis=1)
+        code_dis_correct_pred = tf.equal(self.code_dis_pred, tf.argmax(self.labels, axis=1))
+        self.code_dis_acc = tf.reduce_mean(tf.cast(code_dis_correct_pred, tf.float32))  
+        
+        # AE + WGAN =============================================================================================================   
+        self.dis_t_inputs = self.images
+        self.dis_f_inputs = self.decoder_output
+        dis_t, _ = mz.build_model({"mode":"discriminator", "dis_input":self.dis_t_inputs, "reuse":False})       
+        dis_f, _ = mz.build_model({"mode":"discriminator", "dis_input":self.dis_f_inputs, "reuse":True})       
+        
+        #### WGAN-GP ####
+        # Calculate gradient penalty
+        self.epsilon = epsilon = tf.random_uniform([self.batch_size, 1, 1, 1], 0.0, 1.0)
+        x_hat = epsilon * self.dis_t_inputs + (1. - epsilon) * (self.dis_f_inputs)
+        d_hat, _ = mz.build_model({"mode":"discriminator", "dis_input":x_hat, "reuse":True})
+        
+        d_gp = tf.gradients(d_hat, [x_hat])[0]
+        d_gp = tf.sqrt(tf.reduce_sum(tf.square(d_gp), axis=1))
+        d_gp = tf.reduce_mean((d_gp - 1.0)**2) * 10
+
+        disc_ture_loss = tf.reduce_mean(dis_t)
+        disc_fake_loss = tf.reduce_mean(dis_f)
+        
+        self.content_loss = tf.reduce_mean(tf.abs(self.decoder_output - self.images))
+
+        self.g_loss_1 = 50*self.content_loss + disc_fake_loss + 25*self.code_dis_loss
+        self.d_loss_1 = -(disc_fake_loss - disc_ture_loss) + d_gp           
+
+        # Classifier =============================================================================================================
+        cls_logits = mz.build_model({"mode":"classifier", "cls_input":self.images, "reuse":False})  
+          
+        self.cls_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=cls_logits, labels=self.labels))
+        self.cls_pred = tf.argmax(tf.nn.softmax(cls_logits), axis=1)
+        cls_correct_pred = tf.equal(self.cls_pred, tf.argmax(self.labels, axis=1))
+        self.cls_acc = tf.reduce_mean(tf.cast(cls_correct_pred, tf.float32))     
+        
+        # WGAN ==================================================================================================================       
+        self.f_images = mz.build_model({"mode":"generator", "code":self.z1, "reuse":False})      
+        self.dis2_t_inputs = self.images
+        self.dis2_f_inputs = self.f_images
+        dis2_t, dis2_t_feature = mz.build_model({"mode":"discriminator2", "dis_input":self.dis2_t_inputs, "reuse":False})       
+        dis2_f, dis2_f_feature = mz.build_model({"mode":"discriminator2", "dis_input":self.dis2_f_inputs, "reuse":True})       
+
+        #### WGAN-GP ####
+        # Calculate gradient penalty
+        self.epsilon = epsilon = tf.random_uniform([self.batch_size, 1, 1, 1], 0.0, 1.0)
+        x2_hat = epsilon * self.dis2_t_inputs + (1. - epsilon) * (self.dis2_f_inputs)
+        d2_hat, _ = mz.build_model({"mode":"discriminator2", "dis_input":x2_hat, "reuse":True})
+        
+        d2_gp = tf.gradients(d2_hat, [x2_hat])[0]
+        d2_gp = tf.sqrt(tf.reduce_sum(tf.square(d2_gp), axis=1))
+        d2_gp = tf.reduce_mean((d2_gp - 1.0)**2) * 10
+
+        disc2_ture_loss = tf.reduce_mean(dis2_t)
+        disc2_fake_loss = tf.reduce_mean(dis2_f)
+
+        cls_f_logits = mz.build_model({"mode":"classifier", "cls_input":self.f_images, "reuse":True})  
+        self.cls_f_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=cls_f_logits, labels=self.labels))
+        self.cls_f_pred = tf.argmax(tf.nn.softmax(cls_f_logits), axis=1)
+        cls_correct_f_pred = tf.equal(self.cls_f_pred, tf.argmax(self.labels, axis=1))
+        self.cls_f_acc = tf.reduce_mean(tf.cast(cls_correct_f_pred, tf.float32))     
+        
+        self.feature_loss = tf.reduce_mean(tf.abs(dis2_f_feature - dis2_t_feature))
+        
+        self.g_loss_2 = disc2_fake_loss + 25*self.cls_f_loss + 25*self.feature_loss
+        self.d_loss_2 = -(disc2_fake_loss - disc2_ture_loss) + d2_gp  
+
+        self.g_loss = self.g_loss_1  
+        self.guass_loss = tf.reduce_mean(tf.abs(self.f_images - self.images))
+
+        # ========================================================================================================================        
+        
+        MSE = tf.reduce_mean(tf.squared_difference(self.decoder_output, self.images))    
+        PSNR = tf.constant(255**2,dtype=tf.float32)/MSE
+        PSNR = tf.constant(10,dtype=tf.float32)*log10(PSNR)
+        
+        train_variables = tf.trainable_variables()
+        d1_var = [v for v in train_variables if v.name.startswith("discriminator")]
+        g1_var = [v for v in train_variables if v.name.startswith(("encoder", "decoder", "code_cls"))]
+        d2_var = [v for v in train_variables if v.name.startswith("discriminator2")]
+        g2_var = [v for v in train_variables if v.name.startswith(("generator"))]
+        c_var = [v for v in train_variables if v.name.startswith(("classifier"))]
+        
+        self.train_g = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.g_loss, var_list=g1_var)
+        #self.train_g1 = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.g_loss_1, var_list=g1_var)
+        self.train_d1 = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.d_loss_1, var_list=d1_var)
+        self.train_g2 = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.g_loss_2, var_list=g2_var)
+        self.train_d2 = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.d_loss_2, var_list=d2_var)
+        
+        self.train_c = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.cls_loss, var_list=c_var)
+        
+        with tf.name_scope('train_summary'):
+            tf.summary.scalar("g_loss", self.g_loss, collections=['train'])
+            tf.summary.scalar("g_loss_1", self.g_loss_1, collections=['train'])
+            tf.summary.scalar("g_loss_2", self.g_loss_2, collections=['train'])
+            
+            tf.summary.scalar("d_loss_1", self.d_loss_1, collections=['train'])
+            tf.summary.scalar("d_loss_2", self.d_loss_2, collections=['train'])
+            
+            tf.summary.scalar("cls_loss", self.cls_loss, collections=['train'])
+            tf.summary.scalar("cls_f_loss", self.cls_f_loss, collections=['train'])
+            tf.summary.scalar("cls_acc", self.cls_acc, collections=['train'])
+            tf.summary.scalar("cls_f_acc", self.cls_f_acc, collections=['train'])
+
+            tf.summary.scalar("code_dis_loss", self.code_dis_loss, collections=['train'])
+            tf.summary.scalar("code_dis_acc", self.code_dis_acc, collections=['train'])
+            
+            tf.summary.scalar("MSE", MSE, collections=['train'])
+            tf.summary.scalar("PSNR", PSNR, collections=['train'])
+            
+            tf.summary.scalar("content_loss", self.content_loss, collections=['train'])
+            tf.summary.scalar("guass_loss", self.guass_loss, collections=['train'])
+            
+            tf.summary.image("input_image", self.images, collections=['train'])
+            tf.summary.image("output_image", self.decoder_output, collections=['train']) 
+            tf.summary.image("f_image", self.f_images, collections=['train']) 
+            
+            self.merged_summary_train = tf.summary.merge_all('train')          
+
+        with tf.name_scope('test_summary'):
+            tf.summary.scalar("g_loss", self.g_loss, collections=['test'])
+            tf.summary.scalar("g_loss_1", self.g_loss_1, collections=['test'])
+            tf.summary.scalar("g_loss_2", self.g_loss_2, collections=['test'])
+            
+            tf.summary.scalar("d_loss_1", self.d_loss_1, collections=['test'])
+            tf.summary.scalar("d_loss_2", self.d_loss_2, collections=['test'])
+            
+            tf.summary.scalar("cls_loss", self.cls_loss, collections=['test'])
+            tf.summary.scalar("cls_f_loss", self.cls_f_loss, collections=['test'])
+            tf.summary.scalar("cls_acc", self.cls_acc, collections=['test'])            
+            tf.summary.scalar("cls_f_acc", self.cls_f_acc, collections=['test'])
+
+            tf.summary.scalar("code_dis_loss", self.code_dis_loss, collections=['test'])
+            tf.summary.scalar("code_dis_acc", self.code_dis_acc, collections=['test'])
+            
+            tf.summary.scalar("MSE", MSE, collections=['test'])
+            tf.summary.scalar("PSNR", PSNR, collections=['test'])
+            
+            tf.summary.scalar("content_loss", self.content_loss, collections=['test'])
+            tf.summary.scalar("guass_loss", self.guass_loss, collections=['test'])
+            
+            tf.summary.image("input_image", self.images, collections=['test'])
+            tf.summary.image("output_image", self.decoder_output, collections=['test']) 
+            tf.summary.image("f_image", self.f_images, collections=['test']) 
+            
+            self.merged_summary_test = tf.summary.merge_all('test')          
+
+        with tf.name_scope('anomaly_summary'):
+            tf.summary.scalar("g_loss", self.g_loss, collections=['anomaly'])
+            tf.summary.scalar("g_loss_1", self.g_loss_1, collections=['anomaly'])
+            tf.summary.scalar("g_loss_2", self.g_loss_2, collections=['anomaly'])
+            
+            tf.summary.scalar("d_loss_1", self.d_loss_1, collections=['anomaly'])
+            tf.summary.scalar("d_loss_2", self.d_loss_2, collections=['anomaly'])
+                            
+            tf.summary.scalar("MSE", MSE, collections=['anomaly'])
+            tf.summary.scalar("PSNR", PSNR, collections=['anomaly'])
+            
+            tf.summary.scalar("content_loss", self.content_loss, collections=['anomaly'])
+            tf.summary.scalar("guass_loss", self.guass_loss, collections=['anomaly'])
+            
+            tf.summary.image("input_image", self.images, collections=['anomaly'])
+            tf.summary.image("output_image", self.decoder_output, collections=['anomaly']) 
+            tf.summary.image("f_image", self.f_images, collections=['anomaly']) 
+            
+            self.merged_summary_anomaly = tf.summary.merge_all('anomaly')          
+        
+        self.saver = tf.train.Saver()
+        self.best_saver = tf.train.Saver() 
+
+    def build_eval_AD_att_AE_GAN_CLS_DISE(self):
+
+        # Initial model_zoo
+        mz = model_zoo.model_zoo(self.images, dropout=self.dropout, is_training=self.is_training, model_ticket=self.model_ticket)
+        
+        # Encoder
+        self.t_code, self.t_att = mz.build_model({"mode":"encoder", "en_input":self.images, "reuse":False})       
+
+        # Decoder        
+        self.decoder_output = mz.build_model({"mode":"decoder", "code":self.t_code, "reuse":False})   
+        
+        # Encoder2
+        self.f_code, self.cls_logits, self.f_att = mz.build_model({"mode":"encoder2", "en_input":self.decoder_output, "reuse":False})     
+        self.t_code_2, _, _ = mz.build_model({"mode":"encoder2", "en_input":self.images, "reuse":True})     
+
+        self.saver = tf.train.Saver()
+
+    def train_AD_att_AE_GAN_CLS_DISE(self):
+        
+        new_learning_rate = self.learn_rate_init
+        WGAN2_lr = self.learn_rate_init
+        
+        WGAN2_start_step = 10000
+              
+        init = tf.global_variables_initializer()
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+
+        best_loss = 1000
+
+        with tf.Session(config=config) as sess:
+
+            sess.run(init)
+
+            # Initialzie the iterator
+            anomaly_dataset_idx = np.array(list(range(0, len(self.anomaly_dataset[0]))))
+
+            summary_writer = tf.summary.FileWriter(self.log_dir, sess.graph)
+
+            if self.restore_model == True:
+                print("Restore model: {}".format(self.train_ckpt))
+                self.saver.restore(sess, self.train_ckpt)
+                step = self.restore_step                
+                
+            else:
+                step = 0
+
+            while step <= self.max_iters:
+                  
+                # Get the training batch
+                next_x_images, next_y = get_batch(self.dataset, self.batch_size, self.anoCls)
+                  
+                fd = {
+                        self.images: next_x_images, 
+                        self.labels: next_y, 
+                        self.dropout_rate: self.dropout,
+                        self.lr: new_learning_rate,
+                     }
+                               
+                # Training                 
+                sess.run(self.train_g, feed_dict=fd)
+                
+                sess.run(self.train_c, feed_dict=fd)    
+                
+                if step > WGAN2_start_step:
+                    fd = {
+                            self.images: next_x_images, 
+                            self.labels: next_y, 
+                            self.dropout_rate: self.dropout,
+                            self.lr: WGAN2_lr,
+                         }
+                    sess.run(self.train_g2, feed_dict=fd)
+                                
+                # Training Discriminator
+                for d_iter in range(0, 5):
+                    
+                    # Get the training batch 
+                    next_x_images, next_y = get_batch(self.dataset, self.batch_size, self.anoCls)
+                    
+                    fd = {
+                            self.images: next_x_images, 
+                            self.labels: next_y, 
+                            self.dropout_rate: self.dropout,
+                            self.lr: new_learning_rate,
+                         }                      
+
+                    sess.run(self.train_d1, feed_dict=fd)
+                    
+                    if step > WGAN2_start_step:
+
+                        fd = {
+                                self.images: next_x_images, 
+                                self.labels: next_y, 
+                                self.dropout_rate: self.dropout,
+                                self.lr: WGAN2_lr,
+                             }
+                        sess.run(self.train_d2, feed_dict=fd)
+    
+                # Update Learning rate                
+                if step == 20000 or step == 40000:
+                    new_learning_rate = new_learning_rate * 0.1
+                    print("STEP {}, Learning rate: {}".format(step, new_learning_rate))
+                    if step > WGAN2_start_step + 20000: 
+                        WGAN2_lr = WGAN2_lr * 0.1
+                        print("STEP {}, WGAN2 Learning rate: {}".format(step, WGAN2_lr))
+                
+                # Record
+                if step%200 == 0:
+
+                    # Training set
+                    train_sum, train_loss = sess.run([self.merged_summary_train, self.g_loss_1], feed_dict=fd)
+                    
+                    next_valid_x_images, next_valid_y = get_batch(self.valid_dataset, self.batch_size, self.anoCls)
+                    fd_test = {
+                                self.images: next_valid_x_images, 
+                                self.labels: next_valid_y, 
+                                self.dropout_rate: 0,
+                                self.lr: new_learning_rate,
+                              }
+                                           
+                    test_sum, test_loss = sess.run([self.merged_summary_test, self.g_loss], feed_dict=fd_test)  
+                    
+                    curr_idx = 0
+                    random.shuffle(anomaly_dataset_idx)                   
+
+                    next_ano_x_images = self.anomaly_dataset[0][anomaly_dataset_idx[curr_idx:curr_idx+self.batch_size]]
+                    next_ano_y = self.anomaly_dataset[1][anomaly_dataset_idx[curr_idx:curr_idx+self.batch_size]]   
+                    curr_idx = curr_idx + self.batch_size
+                    
+                    fd_test = {
+                                self.images: next_ano_x_images, 
+                                self.labels: next_ano_y, 
+                                self.dropout_rate: 0,
+                                self.lr: new_learning_rate,
+                              }
+                                               
+                    ano_sum, ano_loss = sess.run([self.merged_summary_anomaly, self.g_loss], feed_dict=fd_test) 
+                      
+                    print("Step %d: LR = [%.7f], Train loss = [%.7f], Test loss = [%.7f], Anomaly loss = [%.7f]" % (step, new_learning_rate, train_loss, test_loss, ano_loss))
+                    
+                    summary_writer.add_summary(train_sum, step)                   
+                    summary_writer.add_summary(test_sum, step)                   
+                    summary_writer.add_summary(ano_sum, step)         
+
+                    if abs(best_loss) > abs(test_loss) and step > 10000:
+                        
+                        best_loss = test_loss
+                        
+                        ckpt_path = os.path.join(self.saved_model_path, 'best_performance', self.ckpt_name + '_%.4f' % (best_loss))
+                        print("* Save ckpt: {}, Test loss: {}".format(ckpt_path, best_loss))
+                        self.best_saver.save(sess, ckpt_path, global_step=step)
+
+                if np.mod(step , 2000) == 0 and step != 0:
+
+                    self.saver.save(sess, os.path.join(self.saved_model_path, self.ckpt_name), global_step=step)
+
+                step += 1
+
+            save_path = self.saver.save(sess , self.saved_model_path)
+            print("Model saved in file: %s" % save_path)
+            print("Best loss: {}".format(best_loss))
+
+    def test_AD_att_AE_GAN_CLS_DISE(self):
 
         init = tf.global_variables_initializer()
         config = tf.ConfigProto()

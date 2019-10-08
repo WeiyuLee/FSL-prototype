@@ -237,22 +237,35 @@ def reshape_image(input, size):
 
     return temp_x
 
-def get_batch(data, batch_size, anoCls, class_num=10):
+def get_batch(data, batch_size, anoCls, class_num=10, random_order=False):
     
     sample_num = batch_size // (class_num-1)
     rdm_idx = np.array(list(range(0, len(data[0][0]))))
     batch_data = np.array([])
     batch_label = np.array([])
     
+    if random_order == True:
+        class_idx = np.array(list(range(0, 10)))
+        rdm_class_idx = np.array(list(range(0, 10)))
+        while True:
+            random.shuffle(rdm_class_idx)
+            if np.sum(rdm_class_idx-class_idx) == 0:
+                break
+        
     for i in range(0, class_num):
         
-        if i == anoCls:
+        if random_order == True:
+            idx = rdm_class_idx[i]
+        else:
+            idx = i
+        
+        if idx == anoCls:
             continue
         
         random.shuffle(rdm_idx)
         
-        temp_data = data[i][0][rdm_idx[0:sample_num]]        
-        temp_label = data[i][1][rdm_idx[0:sample_num]]        
+        temp_data = data[idx][0][rdm_idx[0:sample_num]]        
+        temp_label = data[idx][1][rdm_idx[0:sample_num]]        
 
         batch_data = np.append(batch_data, temp_data)
         batch_label = np.append(batch_label, temp_label)
