@@ -1,6 +1,8 @@
 import tensorflow as tf
 
 import os
+os.environ['KERAS_BACKEND']='tensorflow'
+
 import sys
 sys.path.append('./utility')
 

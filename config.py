@@ -1,3 +1,5 @@
+from uuid import getnode as get_mac
+
 class config:
 
     def __init__(self, configuration):
@@ -8,8 +10,14 @@ class config:
         						"train":{},
                         "test":{},
                         }
-        self.get_config()
 
+        self.mac = get_mac()
+        if self.mac == 189250941727334:
+            self.default_path = "/data/wei/"
+        elif self.mac == 229044592702658:
+            self.default_path = "/home/sdc1/"
+
+        self.get_config()
 
     def get_config(self):
 
@@ -244,7 +252,11 @@ class config:
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v1"
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v2"
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v3"
-        common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_38cls"
+        common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_25cls"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_10cls"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_5cls"
         
         common_config["anomaly_class"] = 9
         
@@ -253,35 +265,33 @@ class config:
         #common_config["anomaly_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug_64x64/pr_test_class_9.p"
         #common_config["anomaly_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p"
         
-        common_config["train_cls_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug"
-        common_config["valid_cls_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug"
-        common_config["anomaly_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p"
+        common_config["train_cls_data_path"] = self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug"
+        common_config["valid_cls_data_path"] = self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug"
+        common_config["anomaly_data_path"] = self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p"
         
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug_64x64/preprocess_train_9.p"
-        common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_9.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_8.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_7.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_6.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_5.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_4.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_3.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_2.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_1.p"
-        #common_config["train_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_0.p"
+        common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_9.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_8.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_7.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_6.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_5.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_4.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_3.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_2.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_1.p"
+        #common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_0.p"
     
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug_64x64/preprocess_test_9.p"
-        common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_9.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_8.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_7.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_6.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_5.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_4.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_3.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_2.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_1.p"
-        #common_config["valid_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_0.p"
+        common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_9.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_8.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_7.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_6.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_5.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_4.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_3.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_2.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_1.p"
+        #common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_0.p"
         
-        common_config["test_data_path"] = ["/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p", "/home/sdc1/dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_9.p"]
+        common_config["test_data_path"] = [self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p", self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_7.p"]
         
         #common_config["test_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed/test.p"
         #common_config["test_data_path"] = "/home/sdc1/dataset/FSL/Cifar-10/preprocessed/preprocess_train_9.p"
@@ -296,10 +306,10 @@ class config:
         #common_config["test_data_path"] = ["/home/sdc1/dataset/FSL/Cifar-10/preprocessed/test.p", "/home/sdc1/dataset/FSL/Cifar-10/preprocessed/preprocess_train_1.p"]
         #common_config["test_data_path"] = ["/home/sdc1/dataset/FSL/Cifar-10/preprocessed/test.p", "/home/sdc1/dataset/FSL/Cifar-10/preprocessed/preprocess_train_0.p"]
         
-        common_config["ckpt_dir"] = "/home/sdc1/model/FSL/FSL-prototype/" + common_config["ckpt_name"]      
-        common_config["test_ckpt"] = "/home/sdc1/model/FSL/FSL-prototype/AD_AE_GAN_3DCode_v3_512_R50_C10_10cls/AD_AE_GAN_3DCode_v3_512_R50_C10_10cls-60000"                
-        common_config["train_ckpt"] = "/home/sdc1/model/FSL/FSL-prototype/AD_att_AE_GAN_CLS_v3/AD_att_AE_GAN_CLS_v3-6000"
-        common_config["log_dir"] = "/home/sdc1/model/FSL/FSL-prototype/log/" + common_config["ckpt_name"]                         
+        common_config["ckpt_dir"] = self.default_path + "model/FSL/FSL-prototype/" + common_config["ckpt_name"]      
+        common_config["test_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_AE_GAN_v1_R50_D1_2/AD_AE_GAN_v1_R50_D1_2-60000"                
+        common_config["train_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_AE_GAN_3DCode_v1_512_R50_C50_10cls/AD_AE_GAN_3DCode_v1_512_R50_C50_10cls-2000"
+        common_config["log_dir"] = self.default_path + "model/FSL/FSL-prototype/log/" + common_config["ckpt_name"]                          
         common_config["is_training"] = True
         #common_config["is_training"] = False
         
