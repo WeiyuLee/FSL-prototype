@@ -259,7 +259,9 @@ class config:
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_10cls"
         #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_v4_woDise_5cls"
         
-        common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_DISE_v1_25cls_25floss"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_DISE_v1_25cls_25floss"
+        #common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_DISE_v1_50cls_25floss_25cdis"
+        common_config["ckpt_name"] = "AD_att_AE_GAN_CLS_DISE_v1_0cls_25floss_50cdis"
         
         common_config["anomaly_class"] = 9
         

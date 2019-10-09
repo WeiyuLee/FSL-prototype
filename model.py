@@ -3735,6 +3735,13 @@ class model(object):
 
     def build_AD_att_AE_GAN_CLS_DISE(self):
        
+        self.cls_coef = 0
+        self.floss_coef = 25
+        self.cdis_coef = 50        
+        print("[cls_coef]: {}".format(self.cls_coef))
+        print("[floss_coef]: {}".format(self.floss_coef))
+        print("[cdis_coef]: {}".format(self.cdis_coef))
+        
         # Initial model_zoo
         mz = model_zoo.model_zoo(self.images, dropout=self.dropout, is_training=self.is_training, model_ticket=self.model_ticket)        
         
@@ -3778,7 +3785,7 @@ class model(object):
         
         self.content_loss = tf.reduce_mean(tf.abs(self.decoder_output - self.images))
 
-        self.g_loss_1 = 50*self.content_loss + disc_fake_loss + 25*self.code_dis_loss
+        self.g_loss_1 = 50*self.content_loss + disc_fake_loss + self.cdis_coef*self.code_dis_loss
         self.d_loss_1 = -(disc_fake_loss - disc_ture_loss) + d_gp           
 
         # Classifier =============================================================================================================
@@ -3817,7 +3824,7 @@ class model(object):
         
         self.feature_loss = tf.reduce_mean(tf.abs(dis2_f_feature - dis2_t_feature))
         
-        self.g_loss_2 = disc2_fake_loss + 25*self.cls_f_loss + 25*self.feature_loss
+        self.g_loss_2 = disc2_fake_loss + self.cls_coef*self.cls_f_loss + self.floss_coef*self.feature_loss
         self.d_loss_2 = -(disc2_fake_loss - disc2_ture_loss) + d2_gp  
 
         self.g_loss = self.g_loss_1  
