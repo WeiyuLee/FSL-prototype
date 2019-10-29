@@ -8,6 +8,7 @@ sys.path.append('./utility')
 
 from utils import mkdir_p
 from model import model
+from model2 import model2
 from utils import CelebA, InputData, InputAllClassData
 import config
 import argparse
@@ -49,6 +50,7 @@ if __name__ == "__main__":
     restore_model = conf["restore_model"]
     restore_step = conf["restore_step"]
     model_ticket = conf["model_ticket"]
+    output_dir = conf["output_dir"]
     
     is_training = conf["is_training"]
     
@@ -61,14 +63,16 @@ if __name__ == "__main__":
         batch_size = conf["batch_size"]
         print("*** [Training] ***")
         print("restore_model: [{}]".format(restore_model))
+        print("train_cls_data_path: [{}]".format(conf["train_cls_data_path"]))
+        print("valid_cls_data_path: [{}]".format(conf["valid_cls_data_path"]))
         print("train_data_path: [{}]".format(conf["train_data_path"]))
-        print("valid_data_path: [{}]".format(conf["valid_data_path"]))
+        print("valid_data_path: [{}]".format(conf["valid_data_path"]))        
         print("anomaly_data_path: [{}]".format(conf["anomaly_data_path"]))
         print("ckpt_name: [{}]".format(ckpt_name))
         print("max_iters: [{}]".format(max_iters))   
         print("learn_rate_init: [{}]".format(learn_rate_init))
     else:
-        batch_size = 1000
+        batch_size = 32
         print("*** [Testing] ***")
         print("test_data_path: [{}]".format(conf["test_data_path"]))
 
@@ -79,16 +83,17 @@ if __name__ == "__main__":
     
     if is_training == True:               
         
-        #cb_ob = InputData(conf["train_data_path"], conf["valid_data_path"], conf["anomaly_data_path"], None)
-        cb_ob = InputAllClassData(conf["anomaly_class"], conf["train_cls_data_path"], conf["valid_cls_data_path"], conf["anomaly_data_path"], None)
+        cb_ob = InputData(conf["train_data_path"], conf["valid_data_path"], conf["anomaly_data_path"], None)
+        #cb_ob = InputAllClassData(conf["anomaly_class"], conf["train_cls_data_path"], conf["valid_cls_data_path"], conf["anomaly_data_path"], None)
 
-        MODEL = model(  batch_size=batch_size, 
+        MODEL = model2( batch_size=batch_size, 
                         max_iters=max_iters, 
                         repeat=data_repeat,
                         dropout=dropout,
                         model_path=model_path, 
                         data_ob=cb_ob, 
                         log_dir=root_log_dir, 
+                        output_dir=output_dir,
                         learnrate_init=learn_rate_init,
                         anoCls=anoCls,
                         ckpt_name=ckpt_name,
@@ -108,23 +113,25 @@ if __name__ == "__main__":
         
         for path in test_data_path:
         
-            cb_ob = InputData(None, None, None, path)
+            cb_ob = InputAllClassData(None, None, None, None, path)
     
-            MODEL = model(  batch_size=batch_size, 
+            MODEL = model2( batch_size=batch_size, 
                             max_iters=max_iters, 
                             repeat=data_repeat,
                             dropout=dropout,
                             model_path=model_path, 
                             data_ob=cb_ob, 
                             log_dir=root_log_dir, 
+                            output_dir=output_dir,
                             learnrate_init=learn_rate_init,
+                            anoCls=anoCls,
                             ckpt_name=ckpt_name,
                             test_ckpt=test_ckpt,
                             train_ckpt=train_ckpt,
                             restore_model=restore_model,
                             restore_step=restore_step,
                             model_ticket=model_ticket,
-                            is_training=is_training)        
+                            is_training=is_training)
             
             MODEL.build_eval_model()
             MODEL.test()

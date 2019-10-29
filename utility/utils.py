@@ -146,7 +146,7 @@ class InputAllClassData(object):
 
     def load_input_pickle(self, pickle_path):
             
-        if pickle_path==None:
+        if pickle_path == None:
             return None
 
         features, labels = pickle.load(open(pickle_path, mode='rb'))
@@ -158,11 +158,14 @@ class InputAllClassData(object):
     
     def load_class_data(self, anoCls, dir_path, data_type):
         
+        if dir_path == None:
+            return None
+
         cls_dict = {}
                 
         for i in range(0, 10):
             
-            if i == anoCls:
+            if i in anoCls:
                 continue
             
             pickle_path = dir_path + "/pr_" + data_type + "_class_" + str(i) + ".p"
@@ -237,10 +240,20 @@ def reshape_image(input, size):
 
     return temp_x
 
-def get_batch(data, batch_size, anoCls, class_num=10, random_order=False):
+def get_batch(data, batch_size):
     
-    sample_num = batch_size // (class_num-1)
-    rdm_idx = np.array(list(range(0, len(data[0][0]))))
+    idx = np.array(list(range(0, len(data[0]))))
+    
+    random.shuffle(idx)
+    next_x_images = data[0][idx[0:batch_size]]
+    next_y = data[1][idx[0:batch_size]]     
+    
+    return next_x_images, next_y
+    
+def get_batch_by_class(data, batch_size, anoCls, random_order=False):
+    
+    class_num = 10 - len(anoCls)
+    sample_num = batch_size // class_num 
     batch_data = np.array([])
     batch_label = np.array([])
     
@@ -251,17 +264,18 @@ def get_batch(data, batch_size, anoCls, class_num=10, random_order=False):
             random.shuffle(rdm_class_idx)
             if np.sum(rdm_class_idx-class_idx) == 0:
                 break
-        
-    for i in range(0, class_num):
+
+    for i in range(0, 10):
         
         if random_order == True:
             idx = rdm_class_idx[i]
         else:
             idx = i
         
-        if idx == anoCls:
+        if idx in anoCls:
             continue
-        
+
+        rdm_idx = np.array(list(range(0, len(data[idx][0]))))        
         random.shuffle(rdm_idx)
         
         temp_data = data[idx][0][rdm_idx[0:sample_num]]        
@@ -273,15 +287,17 @@ def get_batch(data, batch_size, anoCls, class_num=10, random_order=False):
     batch_data = np.reshape(batch_data, tuple([-1, np.shape(temp_data)[1], np.shape(temp_data)[2], np.shape(temp_data)[3]]))
     batch_label = np.reshape(batch_label, tuple([-1, np.shape(temp_label)[1]]))
     
-    rest_sample = batch_size % (class_num-1)
+    rest_sample = batch_size % (class_num)
     if rest_sample != 0:
-   
-        random.shuffle(rdm_idx)
+           
         while True:
             rdm_cls = random.randint(0, class_num-1)
-            if rdm_cls != anoCls:
+            if rdm_cls not in anoCls:
                 break
 
+        rdm_idx = np.array(list(range(0, len(data[rdm_cls][0]))))     
+        random.shuffle(rdm_idx)
+        
         temp_data = data[rdm_cls][0][rdm_idx[0:rest_sample]]        
         temp_label = data[rdm_cls][1][rdm_idx[0:rest_sample]]             
 
@@ -289,4 +305,19 @@ def get_batch(data, batch_size, anoCls, class_num=10, random_order=False):
         batch_label = np.append(batch_label, temp_label, axis=0)
         
     return batch_data, batch_label        
+
+def img_merge(images, output_size):
     
+    h = images.shape[1]
+    w = images.shape[2]
+    
+    output_image = np.zeros((int(h*output_size[0]), int(w*output_size[1]), 3))
+    
+    for idx, curr_image in enumerate(images):
+        
+        i = idx % output_size[1]
+        j = idx // output_size[1]
+        output_image[j * h:j * h + h, i * w: i * w + w, :] = curr_image
+    
+    return output_image
+

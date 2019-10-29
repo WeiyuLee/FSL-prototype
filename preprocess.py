@@ -30,9 +30,10 @@ def normalize(data, mean=[], std=[]):
     : return: Numpy array of normalize data
     """
     
-    print('Data normalization......')
+#    print('Data normalization......')
     if mean == []:
-        mean = np.mean(data, axis=0)        # mean
+        #mean = np.mean(data, axis=0)        # mean
+        mean = 0
     
     if std == []:
         data_n = (data - mean) / 255.
