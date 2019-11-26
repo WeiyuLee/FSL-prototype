@@ -8,6 +8,7 @@ import random
 
 import tensorflow as tf
 import cv2
+import imageio
 
 def log10(x):
     numerator = tf.log(x)
@@ -242,9 +243,12 @@ def reshape_image(input, size):
 
 def get_batch(data, batch_size):
     
-    idx = np.array(list(range(0, len(data[0]))))
+    #idx = np.array(list(range(0, len(data[0]))))
     
-    random.shuffle(idx)
+    #random.shuffle(idx)
+    
+    idx = np.random.randint(0, len(data[0]), batch_size)
+    
     next_x_images = data[0][idx[0:batch_size]]
     next_y = data[1][idx[0:batch_size]]     
     
@@ -321,3 +325,13 @@ def img_merge(images, output_size):
     
     return output_image
 
+def img_output(output_image, output_path):
+
+    print(output_image.shape)
+    
+    output_image = img_merge(output_image[0:256], [16, 16])
+
+    output_image = output_image * 255
+    output_image = output_image.astype(np.uint8)
+    
+    imageio.imwrite(output_path, output_image)

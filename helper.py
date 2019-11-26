@@ -7,8 +7,11 @@ import download_cifar_10 as DL
 import preprocess as preprc
 
 # cifar-10
-mean = np.array([125.3, 123.0, 113.9])
-std = np.array([63.0, 62.1, 66.7])
+#mean = np.array([125.3, 123.0, 113.9])
+#std = np.array([63.0, 62.1, 66.7])
+
+mean = []
+std = []
 
 def _load_label_names():
     """
@@ -286,15 +289,16 @@ def display_image_predictions(features, labels, predictions):
         
 # -----------------------------------------------------------------------------
 
-cifar10_dataset_folder_path = "/home/sdc1/dataset/FSL/Cifar-10/cifar-10-batches-py"
-tar_gz_path = "/home/sdc1/dataset/FSL/Cifar-10/cifar-10-python.tar.gz"
-output_path = "/home/sdc1/dataset/FSL/Cifar-10/pr_single_class_aug_64x64/"
+cifar10_dataset_folder_path = "/data/wei/dataset/FSL/Cifar-10/cifar-10-batches-py"
+tar_gz_path = "/data/wei/dataset/FSL/Cifar-10/cifar-10-python.tar.gz"
+single_class_output_path = "/data/wei/dataset/FSL/Cifar-10/pr_single_class_aug/"
+all_class_output_path = "/data/wei/dataset/FSL/Cifar-10/preprocessed_aug/"
 
 # Download the CIFAR-10 dataset if not exist.
 DL.process(cifar10_dataset_folder_path, tar_gz_path)
 
-preprocess_and_save_single_class_data(cifar10_dataset_folder_path, output_path, aug_enable=True, reshape_enable=True)
+preprocess_and_save_single_class_data(cifar10_dataset_folder_path, single_class_output_path, aug_enable=True, reshape_enable=False)
 
-#for i in range(0, 10):
-#    # Preprocess Training, Validation, and Testing Data
-#    preprocess_and_save_data(cifar10_dataset_folder_path, output_path, i, aug_enable=True, reshape_enable=True)        
+for i in range(0, 10):
+    # Preprocess Training, Validation, and Testing Data
+    preprocess_and_save_data(cifar10_dataset_folder_path, all_class_output_path, i, aug_enable=True, reshape_enable=False)        

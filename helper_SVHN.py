@@ -158,10 +158,10 @@ def preprocess_and_save_single_class_data(SVHN_dataset_folder_path, output_path,
         
 # -----------------------------------------------------------------------------
 
-SVHN_dataset_folder_path = "/home/sdc1/dataset/FSL/SVHN/"
-output_path = "/home/sdc1/dataset/FSL/SVHN/preprocessed/"
+SVHN_dataset_folder_path = "/data/wei/dataset/FSL/SVHN/"
+output_path = "/data/wei/dataset/FSL/SVHN/preprocessed/"
 
-#for i in range(0, 10):
-#    preprocess_and_save_data(SVHN_dataset_folder_path, output_path, rm_class=i)
+for i in range(0, 10):
+    preprocess_and_save_data(SVHN_dataset_folder_path, output_path, rm_class=i)
 
-preprocess_and_save_single_class_data(SVHN_dataset_folder_path, output_path)
+#preprocess_and_save_single_class_data(SVHN_dataset_folder_path, output_path)

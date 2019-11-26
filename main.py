@@ -52,6 +52,8 @@ if __name__ == "__main__":
     model_ticket = conf["model_ticket"]
     output_dir = conf["output_dir"]
     
+    lat_dim = conf["lat_dim"]
+    
     is_training = conf["is_training"]
     
     learn_rate_init = conf["learn_rate_init"]
@@ -102,6 +104,7 @@ if __name__ == "__main__":
                         restore_model=restore_model,
                         restore_step=restore_step,
                         model_ticket=model_ticket,
+                        lat_dim=lat_dim,
                         is_training=is_training)
         
         MODEL.build_model()
@@ -131,6 +134,7 @@ if __name__ == "__main__":
                             restore_model=restore_model,
                             restore_step=restore_step,
                             model_ticket=model_ticket,
+                            lat_dim=lat_dim,
                             is_training=is_training)
             
             MODEL.build_eval_model()
