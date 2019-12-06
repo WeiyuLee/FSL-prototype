@@ -508,7 +508,8 @@ def attention_RCAN(layer_input, initializer, name ,shrink_ratio=0.25):
 
 def channel_attention(image_input, name, initializer=tf.contrib.layers.xavier_initializer(), activat_fn=lrelu, shrink_ratio=0.25, reg=None):
 
-    _,_ , _, c = image_input.get_shape().as_list()
+    #_,_ , _, c = image_input.get_shape().as_list()
+    c = image_input.get_shape().as_list()[-1]
 
     with tf.variable_scope("CA"):
        att_net = tf.reduce_mean(image_input, axis=[1,2], keep_dims=True)          

@@ -146,7 +146,8 @@ class config:
 
         #common_config["model_ticket"] = "AD_DISE"
         #common_config["model_ticket"] = "AD_CLS_DISE"        
-        common_config["model_ticket"] = "AD_CLS_DISE2"        
+        #common_config["model_ticket"] = "AD_CLS_DISE2"        
+        common_config["model_ticket"] = "AD_CLS_DISE3"        
 
         #common_config["ckpt_name"] = "AD_CLS_DISE_v8_1MSE_10CL_1DL_1D_BN_LIN_DRP05_64BCH_128DIM_CON_allcls_sigmoid"
         #common_config["ckpt_name"] = "AD_CLS_DISE_v8_2MSE_10CL_1DL_1D_BN_LIN_DRP05_64BCH_128DIM_CON_allcls_sigmoid"               
@@ -176,22 +177,50 @@ class config:
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DL_1D_1D2"   
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DL_1D_1D2_cifar"       
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_cifar"       
-        common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar"       ###
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DL_1D_1D2_128DIM_cifar"       
         
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_0D_1D2_128DIM"       
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_0D_1D2_128DIM_cifar"       
 
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano0"                    
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano0_zt"            
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano1"       
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano2"       
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano3"              
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano4"                    
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano5"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano6"      
         #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano7"      
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano8"      
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_256DIM_cifar_ano9_zt"       
+        
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_64DIM_cifar_ano9_zt"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_64DIM_cifar_ano9_zt_weakD"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_256DIM_cifar_ano9_zt_weakD"   
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_256DIM_cifar_ano9_zt_weakD_testspeed"   
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_2nd_256DIM_cifar_ano9_zt_weakD"
+        
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt"              
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_256DIM_cifar_ano9_zt"              
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_64DIM_cifar_ano9_zt_ChangeBatch"      
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_ChangeBatch"             
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v2_50L1_25CL_1DLL1_1D_1D2_256DIM_cifar_ano9_zt_ChangeBatch"             
+        
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_75L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt"      
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_100L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_100L1_25CL_1DLL1_5D_1D2_128DIM_cifar_ano9_zt"    
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_200L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_woadv"       
+        
+        #common_config["ckpt_name"] = "AD_CLS_DISE3_v1_50L1_25CL_1DLL1_1D_128DIM_cifar_ano9_zt"     
+        #common_config["ckpt_name"] = "AD_CLS_DISE3_v1_50L1_25CL_1DLL1_1D_128DIM_cifar_ano9_zt_2fakesrc"     
+        common_config["ckpt_name"] = "AD_CLS_DISE3_v1_50L1_25CL_1DLL1_1D_128DIM_cifar_ano9_zt_2fakesrc_lr"     
         
         #common_config["anomaly_class"] = [0,1,3,4,5,7,8,9]
         common_config["anomaly_class"] = 9
-
+        
 #        # SVHN ==================================================================================================================        
 #        common_config["lat_dim"] = 128
 #        common_config["train_cls_data_path"] = self.default_path + "dataset/FSL/SVHN/pr_single_class"
@@ -215,6 +244,7 @@ class config:
         # Cifar-10 ==============================================================================================================
         #common_config["lat_dim"] = 256
         common_config["lat_dim"] = 128
+        #common_config["lat_dim"] = 64
         common_config["train_cls_data_path"] = self.default_path + "dataset/FSL/Cifar-10/pr_single_class"
         common_config["valid_cls_data_path"] = self.default_path + "dataset/FSL/Cifar-10/pr_single_class"
 
@@ -235,12 +265,90 @@ class config:
         
         # =======================================================================================================================
         common_config["ckpt_dir"] = self.default_path + "model/FSL/FSL-prototype/" + common_config["ckpt_name"]      
-        common_config["test_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_DISE2_v1_50L1_25CL_1DL_1D_1D2_cifar/AD_CLS_DISE2_v1_50L1_25CL_1DL_1D_1D2_cifar-500000"               
-        common_config["train_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar/AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar-462000"
+        common_config["test_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_DISE2_v1_100L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt/AD_CLS_DISE2_v1_100L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt-284000"               
+        common_config["train_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_DISE2_v1_75L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt/AD_CLS_DISE2_v1_75L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt-60000"
         common_config["log_dir"] = self.default_path + "model/FSL/FSL-prototype/log/" + common_config["ckpt_name"]        
        
         common_config["is_training"] = True
         #common_config["is_training"] = False
+        
+        common_config["restore_model"] = False
+        common_config["restore_step"] = 60000
+
+    def AD_BASELINE_config(self):
+        
+        # Train config 
+        common_config = self.config["common"]        
+        common_config["batch_size"] = 64
+        common_config["max_iters"] = 500000
+        common_config["learn_rate_init"] = 0.0001
+        common_config["repeat"] = 10000
+        common_config["dropout"] = 0.5
+
+        common_config["model_ticket"] = "AD_CLS_BASELINE"        
+
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano0"               
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano1"               
+        common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano2"               
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano3"               
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano4"          
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano5"          
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano6"        
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano7"     
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano8"     
+        #common_config["ckpt_name"] = "AD_CLS_BASELINE_v1_ano9"                    
+
+        #common_config["anomaly_class"] = [0,1,3,4,5,7,8,9]
+        common_config["anomaly_class"] = 2
+
+#        # SVHN ==================================================================================================================        
+#        common_config["lat_dim"] = 128
+#        common_config["train_cls_data_path"] = self.default_path + "dataset/FSL/SVHN/pr_single_class"
+#        common_config["valid_cls_data_path"] = self.default_path + "dataset/FSL/SVHN/pr_single_class"
+#        
+#        common_config["train_data_path"] = self.default_path + "dataset/FSL/SVHN/preprocessed/preprocess_train_9.p"
+#        common_config["valid_data_path"] = self.default_path + "dataset/FSL/SVHN/preprocessed/preprocess_test_9.p"        
+#        common_config["anomaly_data_path"] = self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_9.p"                
+#        common_config["test_data_path"] = [  self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_0.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_1.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_2.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_3.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_4.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_5.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_6.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_7.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_8.p",
+#                                             self.default_path + "dataset/FSL/SVHN/pr_single_class/pr_test_class_9.p"  ]
+#        common_config["output_dir"] = self.default_path + "dataset/FSL/SVHN/FSL/" + common_config["ckpt_name"]                                  
+
+        # Cifar-10 ==============================================================================================================
+        common_config["lat_dim"] = []
+        common_config["train_cls_data_path"] = self.default_path + "dataset/FSL/Cifar-10/pr_single_class"
+        common_config["valid_cls_data_path"] = self.default_path + "dataset/FSL/Cifar-10/pr_single_class"
+
+        common_config["train_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_train_" + str(common_config["anomaly_class"]) + ".p"
+        common_config["valid_data_path"] = self.default_path + "dataset/FSL/Cifar-10/preprocessed_aug/preprocess_test_" + str(common_config["anomaly_class"]) + ".p"        
+        common_config["anomaly_data_path"] = self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_" + str(common_config["anomaly_class"]) + ".p"                
+        common_config["test_data_path"] = [ self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_0.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_1.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_2.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_3.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_4.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_5.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_6.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_7.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_8.p",
+                                            self.default_path + "dataset/FSL/Cifar-10/pr_single_class_aug/pr_test_class_9.p" ]
+        common_config["output_dir"] = self.default_path + "dataset/FSL/Cifar-10/FSL/" + common_config["ckpt_name"]                                  
+        
+        # =======================================================================================================================
+        common_config["ckpt_dir"] = self.default_path + "model/FSL/FSL-prototype/" + common_config["ckpt_name"]      
+        common_config["test_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_BASELINE_v1_ano2/AD_CLS_BASELINE_v1_ano2-500000"               
+        common_config["train_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar/AD_CLS_DISE2_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar-462000"
+        common_config["log_dir"] = self.default_path + "model/FSL/FSL-prototype/log/" + common_config["ckpt_name"]        
+       
+        #common_config["is_training"] = True
+        common_config["is_training"] = False
         
         common_config["restore_model"] = False
         common_config["restore_step"] = 462000
