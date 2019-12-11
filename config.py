@@ -142,12 +142,13 @@ class config:
         common_config["max_iters"] = 500000
         common_config["learn_rate_init"] = 0.0001
         common_config["repeat"] = 10000
-        common_config["dropout"] = 0.5
+        common_config["dropout"] = 0.25
 
         #common_config["model_ticket"] = "AD_DISE"
         #common_config["model_ticket"] = "AD_CLS_DISE"        
         #common_config["model_ticket"] = "AD_CLS_DISE2"        
-        common_config["model_ticket"] = "AD_CLS_DISE3"        
+        #common_config["model_ticket"] = "AD_CLS_DISE3"        
+        common_config["model_ticket"] = "AD_CLS_DISE4"   
 
         #common_config["ckpt_name"] = "AD_CLS_DISE_v8_1MSE_10CL_1DL_1D_BN_LIN_DRP05_64BCH_128DIM_CON_allcls_sigmoid"
         #common_config["ckpt_name"] = "AD_CLS_DISE_v8_2MSE_10CL_1DL_1D_BN_LIN_DRP05_64BCH_128DIM_CON_allcls_sigmoid"               
@@ -216,10 +217,24 @@ class config:
         
         #common_config["ckpt_name"] = "AD_CLS_DISE3_v1_50L1_25CL_1DLL1_1D_128DIM_cifar_ano9_zt"     
         #common_config["ckpt_name"] = "AD_CLS_DISE3_v1_50L1_25CL_1DLL1_1D_128DIM_cifar_ano9_zt_2fakesrc"     
-        common_config["ckpt_name"] = "AD_CLS_DISE3_v1_50L1_25CL_1DLL1_1D_128DIM_cifar_ano9_zt_2fakesrc_lr"     
+        #common_config["ckpt_name"] = "AD_CLS_DISE3_v1_50L1_25CL_1DLL1_1D_128DIM_cifar_ano9_zt_2fakesrc_lr"     
+        
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_3layers"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_3layers_enDis"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_3layers_enDis_drop025"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_3layers_enDis_drop000"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_3layers_enDis_fcdrop025"       
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_10CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_3layers_enDis_drop025"   
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_1CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt_3layers_enDis_drop025"       
+        
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_10CL_1DLL1_1D_1D2_128DIM_cifar_ano0_zt_3layers_enDis_drop025"   
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_10CL_1DLL1_1D_1D2_128DIM_cifar_ano1_zt_3layers_enDis_drop025"   
+        common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_10CL_1DLL1_1D_1D2_128DIM_cifar_ano2_zt_3layers_enDis_drop025"   
+        #common_config["ckpt_name"] = "AD_CLS_DISE4_v1_50L1_10CL_1DLL1_1D_1D2_128DIM_cifar_ano8_zt_3layers_enDis_drop025"   
         
         #common_config["anomaly_class"] = [0,1,3,4,5,7,8,9]
-        common_config["anomaly_class"] = 9
+        common_config["anomaly_class"] = 2
         
 #        # SVHN ==================================================================================================================        
 #        common_config["lat_dim"] = 128
@@ -265,7 +280,7 @@ class config:
         
         # =======================================================================================================================
         common_config["ckpt_dir"] = self.default_path + "model/FSL/FSL-prototype/" + common_config["ckpt_name"]      
-        common_config["test_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_DISE2_v1_100L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt/AD_CLS_DISE2_v1_100L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt-284000"               
+        common_config["test_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_DISE4_v1_50L1_10CL_1DLL1_1D_1D2_128DIM_cifar_ano1_zt_3layers_enDis_drop025/AD_CLS_DISE4_v1_50L1_10CL_1DLL1_1D_1D2_128DIM_cifar_ano1_zt_3layers_enDis_drop025-222000"               
         common_config["train_ckpt"] = self.default_path + "model/FSL/FSL-prototype/AD_CLS_DISE2_v1_75L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt/AD_CLS_DISE2_v1_75L1_25CL_1DLL1_1D_1D2_128DIM_cifar_ano9_zt-60000"
         common_config["log_dir"] = self.default_path + "model/FSL/FSL-prototype/log/" + common_config["ckpt_name"]        
        
