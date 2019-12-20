@@ -4,10 +4,10 @@ clc; clear; close all;
 %model_name = 'AD_CLS_DISE_v8_50MSE_25CL_1DL_1D_retrain';
 
 dataset = 'Cifar-10';
-model_name = 'AD_CLS_DISE4_v1_50L1_10CL_1DLL1_1D_1D2_128DIM_cifar_ano1_zt_3layers_enDis_drop025';
+model_name = 'AD_VAE_DISE3_v1_50L1_1CL_1DL_1D_256DIM_cifar_ano9_VAE_drop0_1StageTrain_1e3_SingleDis';
 
 normal_class_num = 10;
-anomaly_class_idx = 1;
+anomaly_class_idx = 9;
 
 fprintf(['Anomaly Class:' num2str(anomaly_class_idx) '\n']);
 
@@ -103,9 +103,9 @@ ROC_FPR = [];
 AUC = 0;
 count = 0;
 
-lamda = 1;
-normal_target = (1-lamda)*normal_score + lamda*normal_z1;
-anomaly_target = (1-lamda)*anomaly_score + lamda*anomaly_z1;
+lamda = 0.78;
+normal_target = (1-lamda)*(1./normal_content_loss) + lamda*normal_z1;
+anomaly_target = (1-lamda)*(1./anomaly_content_loss) + lamda*anomaly_z1;
 
 min_val = min(min(normal_target), min(anomaly_target));
 max_val = max(max(normal_target), max(anomaly_target));
