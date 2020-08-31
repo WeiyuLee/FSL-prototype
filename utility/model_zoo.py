@@ -5,12 +5,13 @@ import math
 
 class model_zoo:
     
-    def __init__(self, inputs, dropout, lat_dim, is_training, model_ticket):
+    def __init__(self, inputs, dropout, lat_dim, channel, is_training, model_ticket):
         
         self.model_ticket = model_ticket
         self.inputs = inputs
         self.dropout = dropout
         self.lat_dim = lat_dim
+        self.channel = channel
         self.is_training = is_training       
 
     def build_model(self, kwargs = {}):
@@ -19,7 +20,7 @@ class model_zoo:
                       "AD_att_AE_GAN_3DCode", "AD_att_AE_GAN_3DCode_32x32", 
                       "AD_att_AE_GAN_CLS", "AD_att_AE_GAN_CLS_DISE",
                       "AD_DISE", "AD_CLS_DISE", "AD_CLS_DISE2","AD_CLS_DISE3", "AD_CLS_DISE4", "AD_CLS_DISE5", "AD_VAE_DISE", "AD_VAE_DISE2", "AD_VAE_DISE3",
-                      "AD_CLS_BASELINE",
+                      "AD_VAE_BASELINE", "AD_CLS_BASELINE",
                       "GANomaly", "RaGAN_MNIST"]
         
         if self.model_ticket not in model_list:
@@ -4865,7 +4866,7 @@ class model_zoo:
                 "deconv_3": [3,3,128],
                 "deconv_4": [3,3,64],
                 "conv_5": [3,3,32],
-                "conv_6": [3,3,3], 
+                "conv_6": [3,3,self.channel], 
     
                 "dis_conv_1": [3,3,32],
                 "dis_conv_2": [3,3,64],            
@@ -4877,7 +4878,8 @@ class model_zoo:
                 "dis_fc_3": 4096,
                 "dis_fc_4": 2048,
                 
-                "dis_feature_fc_1": 1024,
+                #"dis_feature_fc_1": 1024,
+                "dis_feature_fc_1": 512,
                 "dis_feature_out": 16,
                               
             }
@@ -4925,7 +4927,7 @@ class model_zoo:
                     fc_code = tf.reshape(conv_code, [tf.shape(self.inputs)[0], 1024])                   
                     fc_code = nf.fc_layer(fc_code, model_params["fc_code"], name="fc_code", activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)
                     fc_code = tf.layers.dropout(fc_code, rate=self.dropout, training=self.is_training, name='fc_code_dropout')
-                    #fc_code_z1 = tf.layers.dropout(fc_code, rate=self.dropout, training=self.is_training, name='fc_code_dropout')
+                    #z1_code = tf.layers.dropout(fc_code, rate=self.dropout, training=self.is_training, name='z1_code_dropout')
                     print("fc_code: %s" % fc_code.get_shape())     
                     
                     z1 = nf.fc_layer(fc_code, model_params["fc_z1"], name="fc_z1", activat_fn=None)
@@ -4960,7 +4962,7 @@ class model_zoo:
                     deconv_2_3 = nf.deconvolution_layer(deconv_2_1 + deconv_2_2, model_params["deconv_2"], [tf.shape(self.inputs)[0], 8, 8, 256], [1,1,1,1], name="deconv_2_3", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
                     deconv_2 = deconv_2_1 + deconv_2_2 + deconv_2_3
                     deconv_2, _ = nf.channel_attention(deconv_2, name='deconv_2_att')                    
-                    deconv_2 = tf.layers.dropout(deconv_2, rate=self.dropout, training=self.is_training, name='deconv_2_dropout')
+                    #deconv_2 = tf.layers.dropout(deconv_2, rate=self.dropout, training=self.is_training, name='deconv_2_dropout')
                     print("deconv_2: %s" % deconv_2.get_shape())                       
                     
                     deconv_3_1 = nf.deconvolution_layer(deconv_2, model_params["deconv_3"], [tf.shape(self.inputs)[0], 16, 16, 128], [1,2,2,1], name="deconv_3_1", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
@@ -4968,7 +4970,7 @@ class model_zoo:
                     deconv_3_3 = nf.deconvolution_layer(deconv_3_1 + deconv_3_2, model_params["deconv_3"], [tf.shape(self.inputs)[0], 16, 16, 128], [1,1,1,1], name="deconv_3_3", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
                     deconv_3 = deconv_3_1 + deconv_3_2 + deconv_3_3
                     deconv_3, _ = nf.channel_attention(deconv_3, name='deconv_3_att')                    
-                    deconv_3 = tf.layers.dropout(deconv_3, rate=self.dropout, training=self.is_training, name='deconv_3_dropout')
+                    #deconv_3 = tf.layers.dropout(deconv_3, rate=self.dropout, training=self.is_training, name='deconv_3_dropout')
                     print("deconv_3: %s" % deconv_3.get_shape())                       
     
                     deconv_4_1 = nf.deconvolution_layer(deconv_3, model_params["deconv_4"], [tf.shape(self.inputs)[0], 32, 32, 64], [1,2,2,1], name="deconv_4_1", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
@@ -4976,7 +4978,7 @@ class model_zoo:
                     deconv_4_3 = nf.deconvolution_layer(deconv_4_1 + deconv_4_2, model_params["deconv_4"], [tf.shape(self.inputs)[0], 32, 32, 64], [1,1,1,1], name="deconv_4_3", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
                     deconv_4 = deconv_4_1 + deconv_4_2 + deconv_4_3
                     deconv_4, _ = nf.channel_attention(deconv_4, name='deconv_4_att')                    
-                    deconv_4 = tf.layers.dropout(deconv_4, rate=self.dropout, training=self.is_training, name='deconv_4_dropout')
+                    #deconv_4 = tf.layers.dropout(deconv_4, rate=self.dropout, training=self.is_training, name='deconv_4_dropout')
                     print("deconv_4: %s" % deconv_4.get_shape())          
                                     
                     conv_6 = nf.convolution_layer(deconv_4, model_params["conv_6"], [1,1,1,1], name="conv_6", padding='SAME', activat_fn=tf.nn.sigmoid)                
@@ -5043,6 +5045,168 @@ class model_zoo:
                     print("dis_feature_out: %s" % dis_feature_out.get_shape())                         
                     
                     return dis_feature_out 
+                    
+#            if mode is "discriminator":
+#                with tf.variable_scope("discriminator", reuse=reuse):          
+#                    
+#                    dis_input = kwargs["dis_input"]
+#                    
+#                    print("[Discriminator-1] Image input: %s" % dis_input[0].get_shape())
+#                    print("[Discriminator-1] Latent input: %s" % dis_input[1].get_shape())
+#                    
+#                    # Image part
+#                    dis_conv_1_1 = nf.convolution_layer(dis_input[0], model_params["dis_conv_1"], [1,2,2,1], name="dis_conv_1_1", padding='SAME', activat_fn=nf.lrelu)
+#                    dis_conv_1_2 = nf.convolution_layer(dis_conv_1_1, model_params["dis_conv_1"], [1,1,1,1], name="dis_conv_1_2", padding='SAME', activat_fn=nf.lrelu)
+#                    dis_conv_1_3 = nf.convolution_layer(dis_conv_1_1 + dis_conv_1_2, model_params["dis_conv_1"], [1,1,1,1], name="dis_conv_1_3", padding='SAME', activat_fn=nf.lrelu)                
+#                    dis_conv_1 = dis_conv_1_1 + dis_conv_1_2 + dis_conv_1_3
+#                    dis_conv_1, _ = nf.channel_attention(dis_conv_1, name='dis_conv1_att')
+#                    print("dis_conv_1: %s" % dis_conv_1.get_shape())     
+#    
+#                    dis_conv_2_1 = nf.convolution_layer(dis_conv_1, model_params["dis_conv_2"], [1,2,2,1], name="dis_conv_2_1", padding='SAME', activat_fn=nf.lrelu)
+#                    dis_conv_2_2 = nf.convolution_layer(dis_conv_2_1, model_params["dis_conv_2"], [1,1,1,1], name="dis_conv_2_2", padding='SAME', activat_fn=nf.lrelu)
+#                    dis_conv_2_3 = nf.convolution_layer(dis_conv_2_1 + dis_conv_2_2, model_params["dis_conv_2"], [1,1,1,1], name="dis_conv_2_3", padding='SAME', activat_fn=nf.lrelu)                
+#                    dis_conv_2 = dis_conv_2_1 + dis_conv_2_2 + dis_conv_2_3
+#                    dis_conv_2, dis_conv_2_att = nf.channel_attention(dis_conv_2, name='dis_conv2_att')
+#                    print("dis_conv_2: %s" % dis_conv_2.get_shape())     
+#    
+#                    dis_conv_3_1 = nf.convolution_layer(dis_conv_2, model_params["dis_conv_3"], [1,2,2,1], name="dis_conv_3_1", padding='SAME', activat_fn=nf.lrelu)
+#                    dis_conv_3_2 = nf.convolution_layer(dis_conv_3_1, model_params["dis_conv_3"], [1,1,1,1], name="dis_conv_3_2", padding='SAME', activat_fn=nf.lrelu)
+#                    dis_conv_3_3 = nf.convolution_layer(dis_conv_3_1 + dis_conv_3_2, model_params["dis_conv_3"], [1,1,1,1], name="dis_conv_3_3", padding='SAME', activat_fn=nf.lrelu)         
+#                    dis_conv_3 = dis_conv_3_1 + dis_conv_3_2 + dis_conv_3_3
+#                    dis_conv_3, _ = nf.channel_attention(dis_conv_3, name='dis_conv3_att')
+#                    print("dis_conv_3: %s" % dis_conv_3.get_shape())         
+#                    
+#                    dis_conv_code = nf.convolution_layer(dis_conv_3, model_params["conv_code"], [1,1,1,1], name="dis_conv_code", padding='VALID', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)                   
+#                    dis_conv_code = tf.reshape(dis_conv_code, [tf.shape(self.inputs)[0], 1024])
+#                    print("dis_conv_code: %s" % dis_conv_code.get_shape())         
+#                                 
+#                    # Concat
+#                    dis_feature = tf.concat([dis_conv_code, dis_input[1]], -1)
+#                    print("dis_feature: %s" % dis_feature.get_shape())  
+#                    
+#                    dis_feature_fc_1 = nf.fc_layer(dis_feature, model_params["dis_feature_fc_1"], name="dis_feature_fc_1", activat_fn=nf.lrelu)
+#                    print("dis_feature_fc_1: %s" % dis_feature_fc_1.get_shape())                  
+#    
+#                    dis_feature_out = nf.fc_layer(dis_feature_fc_1, model_params["dis_feature_out"], name="dis_feature_out", activat_fn=nf.lrelu)
+#                    print("dis_feature_out: %s" % dis_feature_out.get_shape())                         
+#                    
+#                    return dis_feature_out                 
+
+    def AD_VAE_BASELINE(self, kwargs):
+             
+            model_params = {       
+    
+                "conv_1": [3,3,64],
+                "conv_2": [3,3,128],
+                "conv_3": [3,3,256],
+                "conv_code": [1,1,64],
+                "fc_code": 1024,
+                "fc_mean": self.lat_dim,
+                "fc_std": self.lat_dim,
+    
+                "fc_1": 1024,
+                "deconv_2": [3,3,256],
+                "deconv_3": [3,3,128],
+                "deconv_4": [3,3,64],
+                "conv_5": [3,3,32],
+                "conv_6": [3,3,self.channel], 
+                              
+            }
+    
+            mode = kwargs["mode"]
+            reuse = kwargs["reuse"]
+    
+            print("===================================================================")
+    
+            if mode is "encoder":                
+                with tf.variable_scope("encoder", reuse=reuse):
+    
+                    en_input = kwargs["en_input"]
+                    
+                    print("[Encoder] input: %s" % en_input.get_shape())
+                    
+                    conv_1_1 = nf.convolution_layer(en_input, model_params["conv_1"], [1,2,2,1], name="conv_1_1", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)               
+                    conv_1_2 = nf.convolution_layer(conv_1_1, model_params["conv_1"], [1,1,1,1], name="conv_1_2", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)               
+                    conv_1_3 = nf.convolution_layer(conv_1_1 + conv_1_2, model_params["conv_1"], [1,1,1,1], name="conv_1_3", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)               
+                    conv_1 = conv_1_1 + conv_1_2 + conv_1_3
+                    conv_1, _ = nf.channel_attention(conv_1, name='conv_1_att')                    
+                    conv_1 = tf.layers.dropout(conv_1, rate=self.dropout, training=self.is_training, name='conv_1_dropout')
+                    print("conv_1: %s" % conv_1.get_shape())       
+    
+                    conv_2_1 = nf.convolution_layer(conv_1, model_params["conv_2"], [1,2,2,1], name="conv_2_1", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)
+                    conv_2_2 = nf.convolution_layer(conv_2_1, model_params["conv_2"], [1,1,1,1], name="conv_2_2", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)
+                    conv_2_3 = nf.convolution_layer(conv_2_1 + conv_2_2, model_params["conv_2"], [1,1,1,1], name="conv_2_3", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)               
+                    conv_2 = conv_2_1 + conv_2_2 + conv_2_3
+                    conv_2, _ = nf.channel_attention(conv_2, name='conv_2_att')                    
+                    conv_2 = tf.layers.dropout(conv_2, rate=self.dropout, training=self.is_training, name='conv_2_dropout')
+                    print("conv_2: %s" % conv_2.get_shape())       
+                    
+                    conv_3_1 = nf.convolution_layer(conv_2, model_params["conv_3"], [1,2,2,1], name="conv_3_1", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)
+                    conv_3_2 = nf.convolution_layer(conv_3_1, model_params["conv_3"], [1,1,1,1], name="conv_3_2", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)
+                    conv_3_3 = nf.convolution_layer(conv_3_1 + conv_3_2, model_params["conv_3"], [1,1,1,1], name="conv_3_3", padding='SAME', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)               
+                    conv_3 = conv_3_1 + conv_3_2 + conv_3_3
+                    conv_3, _ = nf.channel_attention(conv_3, name='conv_3_att')                    
+                    conv_3 = tf.layers.dropout(conv_3, rate=self.dropout, training=self.is_training, name='conv_3_dropout')
+                    print("conv_3: %s" % conv_3.get_shape())                       
+                                          
+                    conv_code = nf.convolution_layer(conv_3, model_params["conv_code"], [1,1,1,1], name="conv_code", padding='VALID', activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)
+                    conv_code = tf.layers.dropout(conv_code, rate=self.dropout, training=self.is_training, name='conv_code_dropout')
+                    print("conv_code: %s" % conv_code.get_shape())                       
+                    
+                    fc_code = tf.reshape(conv_code, [tf.shape(self.inputs)[0], 1024])                   
+                    fc_code = nf.fc_layer(fc_code, model_params["fc_code"], name="fc_code", activat_fn=nf.lrelu, is_bn=True, is_training=self.is_training)
+                    fc_code = tf.layers.dropout(fc_code, rate=self.dropout, training=self.is_training, name='fc_code_dropout')
+                    print("fc_code: %s" % fc_code.get_shape())     
+
+                    en_mean = nf.fc_layer(fc_code, model_params["fc_mean"], name="fc_mean", activat_fn=None)
+                    print("en_mean: %s" % en_mean.get_shape())    
+                    
+                    en_std = nf.fc_layer(fc_code, model_params["fc_std"], name="fc_std", activat_fn=None)
+                    print("en_std: %s" % en_std.get_shape())        
+                                                           
+                    return en_mean, en_std
+    
+            if mode is "decoder": 
+                with tf.variable_scope("decoder", reuse=reuse):
+                                   
+                    code_layer = kwargs["code"]
+    
+                    print("[Decoder] input: %s" % code_layer.get_shape())
+                    
+                    fc_1 = nf.fc_layer(code_layer, model_params["fc_1"], name="fc_1", activat_fn=nf.lrelu)
+                    print("fc_1: %s" % fc_1.get_shape())                       
+                    
+                    fc_1 = tf.reshape(fc_1, [tf.shape(self.inputs)[0], 4, 4, 64])
+    
+                    deconv_2_1 = nf.deconvolution_layer(fc_1, model_params["deconv_2"], [tf.shape(self.inputs)[0], 8, 8, 256], [1,2,2,1], name="deconv_2_1", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_2_2 = nf.deconvolution_layer(deconv_2_1, model_params["deconv_2"], [tf.shape(self.inputs)[0], 8, 8, 256], [1,1,1,1], name="deconv_2_2", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_2_3 = nf.deconvolution_layer(deconv_2_1 + deconv_2_2, model_params["deconv_2"], [tf.shape(self.inputs)[0], 8, 8, 256], [1,1,1,1], name="deconv_2_3", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_2 = deconv_2_1 + deconv_2_2 + deconv_2_3
+                    deconv_2, _ = nf.channel_attention(deconv_2, name='deconv_2_att')                    
+                    deconv_2 = tf.layers.dropout(deconv_2, rate=self.dropout, training=self.is_training, name='deconv_2_dropout')
+                    print("deconv_2: %s" % deconv_2.get_shape())                       
+                    
+                    deconv_3_1 = nf.deconvolution_layer(deconv_2, model_params["deconv_3"], [tf.shape(self.inputs)[0], 16, 16, 128], [1,2,2,1], name="deconv_3_1", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_3_2 = nf.deconvolution_layer(deconv_3_1, model_params["deconv_3"], [tf.shape(self.inputs)[0], 16, 16, 128], [1,1,1,1], name="deconv_3_2", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_3_3 = nf.deconvolution_layer(deconv_3_1 + deconv_3_2, model_params["deconv_3"], [tf.shape(self.inputs)[0], 16, 16, 128], [1,1,1,1], name="deconv_3_3", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_3 = deconv_3_1 + deconv_3_2 + deconv_3_3
+                    deconv_3, _ = nf.channel_attention(deconv_3, name='deconv_3_att')                    
+                    deconv_3 = tf.layers.dropout(deconv_3, rate=self.dropout, training=self.is_training, name='deconv_3_dropout')
+                    print("deconv_3: %s" % deconv_3.get_shape())                       
+    
+                    deconv_4_1 = nf.deconvolution_layer(deconv_3, model_params["deconv_4"], [tf.shape(self.inputs)[0], 32, 32, 64], [1,2,2,1], name="deconv_4_1", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_4_2 = nf.deconvolution_layer(deconv_4_1, model_params["deconv_4"], [tf.shape(self.inputs)[0], 32, 32, 64], [1,1,1,1], name="deconv_4_2", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_4_3 = nf.deconvolution_layer(deconv_4_1 + deconv_4_2, model_params["deconv_4"], [tf.shape(self.inputs)[0], 32, 32, 64], [1,1,1,1], name="deconv_4_3", padding='SAME', activat_fn=tf.nn.relu, is_bn=True, is_training=self.is_training)
+                    deconv_4 = deconv_4_1 + deconv_4_2 + deconv_4_3
+                    deconv_4, _ = nf.channel_attention(deconv_4, name='deconv_4_att')                    
+                    deconv_4 = tf.layers.dropout(deconv_4, rate=self.dropout, training=self.is_training, name='deconv_4_dropout')
+                    print("deconv_4: %s" % deconv_4.get_shape())          
+                                    
+                    conv_6 = nf.convolution_layer(deconv_4, model_params["conv_6"], [1,1,1,1], name="conv_6", padding='SAME', activat_fn=tf.nn.sigmoid)                
+                    print("conv_6: %s" % conv_6.get_shape())  
+                    
+                    return conv_6                
+            
                 
     def AD_CLS_BASELINE(self, kwargs):
              

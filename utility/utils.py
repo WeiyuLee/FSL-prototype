@@ -10,6 +10,8 @@ import tensorflow as tf
 import cv2
 import imageio
 
+from keras.datasets import mnist
+
 def log10(x):
     numerator = tf.log(x)
     denominator = tf.log(tf.constant(10, dtype=numerator.dtype))
@@ -100,7 +102,6 @@ class CelebA(object):
 class InputData(object):
     def __init__(self, train_images_path, valid_images_path, anomaly_images_path, test_images_path):
 
-        self.dataname = "InputData"
         self.image_size = 0
         self.channel = 0
         self.train_images_path = train_images_path
@@ -120,13 +121,95 @@ class InputData(object):
         if pickle_path==None:
             return None
 
+        print("Load pickle: {}".format(pickle_path))
+
         features, labels = pickle.load(open(pickle_path, mode='rb'))
-        
+
+        print("==shape: {}".format(features.shape))
+                
         self.image_size = np.shape(features)[1]
         self.channel = np.shape(features)[-1]
 
         return (features, labels)
 
+class InputMNISTData(object):
+    def __init__(self):
+
+        self.image_size = 32
+        self.channel = 1
+        self.train_images_path = None
+        self.test_images_path = None
+        self.train_data_list = []
+        self.valid_data_list = []
+        self.anomaly_data_list = []
+        self.test_data_list = []
+        self.anoCls = []
+
+    def reshape_x(self, x):
+
+        new_x = np.empty((len(x), 32, 32))
+        for i, e in enumerate(x):
+            new_x[i] = cv2.resize(e, (32, 32))
+        #return np.expand_dims(new_x, axis=-1) / 127 - 1
+        return new_x
+
+    def one_hot_encode(self, x):
+
+        output = np.zeros((len(x), 10))
+        
+        for i, j in enumerate(x):
+            output[i,j] = 1
+               
+        return output
+    
+    def load_input_data(self, anoCls):
+        
+        self.anoCls = anoCls
+        
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
+                       
+        x_train = self.reshape_x(x_train) / 255.0
+        x_test = self.reshape_x(x_test) / 255.0
+               
+        x_train = np.expand_dims(x_train, axis=-1)
+        x_test = np.expand_dims(x_test, axis=-1)       
+        
+        x_train_normal = x_train[y_train != anoCls] 
+        y_train_normal = y_train[y_train != anoCls] 
+        x_train_ano = x_train[y_train == anoCls] 
+        y_train_ano = y_train[y_train == anoCls] 
+        x_test_normal = x_test[y_test != anoCls] 
+        y_test_normal = y_test[y_test != anoCls] 
+
+        y_train_normal = self.one_hot_encode(y_train_normal)
+        y_train_ano = self.one_hot_encode(y_train_ano)
+        y_test_normal = self.one_hot_encode(y_test_normal)
+        #y_test = self.one_hot_encode(y_test)
+                       
+        self.train_data_list = (x_train_normal, y_train_normal)
+        print("==[MNIST] Train data shape: {}, {}".format(x_train_normal.shape, y_train_normal.shape))
+        self.valid_data_list = (x_test_normal, y_test_normal)
+        print("==[MNIST] Validation data shape: {}, {}".format(x_test_normal.shape, y_test_normal.shape))
+        self.anomaly_data_list = (x_train_ano, y_train_ano)
+        print("==[MNIST] Anomaly data shape: {}, {}".format(x_train_ano.shape, y_train_ano.shape))
+        #self.test_data_list = (x_test, y_test)
+        #print("==[MNIST] Test data shape: {}, {}".format(x_test.shape, y_test.shape))
+    
+    def load_test_data(self, anoCls):
+    
+        self.anoCls = anoCls
+        
+        _, (x_test, y_test) = mnist.load_data()
+        x_test = self.reshape_x(x_test) / 255.0
+        x_test = np.expand_dims(x_test, axis=-1)       
+        
+        x_test_ano = x_test[y_test == anoCls] 
+        y_test_ano = y_test[y_test == anoCls] 
+        y_test_ano = self.one_hot_encode(y_test_ano)
+
+        self.test_data_list = (x_test_ano, y_test_ano)
+        print("==[MNIST] Test data shape: {}, {}".format(x_test_ano.shape, y_test_ano.shape))
+        
 class InputAllClassData(object):
     def __init__(self, anoCls, train_images_path, valid_images_path, anomaly_images_path, test_images_path):
 
@@ -327,6 +410,9 @@ def img_merge(images, output_size):
 
 def img_output(output_image, output_path):
 
+    if len(output_image.shape) <= 3:
+        output_image = np.expand_dims(output_image, axis=-1)
+    
     print(output_image.shape)
     
     output_image = img_merge(output_image[0:256], [16, 16])

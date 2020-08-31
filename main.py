@@ -9,7 +9,7 @@ sys.path.append('./utility')
 from utils import mkdir_p
 from model import model
 from model2 import model2
-from utils import CelebA, InputData, InputAllClassData
+from utils import CelebA, InputData, InputAllClassData, InputMNISTData
 import config
 import argparse
 
@@ -52,6 +52,8 @@ if __name__ == "__main__":
     model_ticket = conf["model_ticket"]
     output_dir = conf["output_dir"]
     
+    dataset_name = conf["dataset"]
+    
     lat_dim = conf["lat_dim"]
     
     is_training = conf["is_training"]
@@ -60,24 +62,27 @@ if __name__ == "__main__":
     
     anoCls = conf["anomaly_class"]
 
-    print("===================================================================")
+    print("===================================================================")       
     if is_training == True:
         batch_size = conf["batch_size"]
         print("*** [Training] ***")
-        print("restore_model: [{}]".format(restore_model))
+        print("Dataset: [{}]".format(dataset_name))
+        print("restore_model: [{}]".format(restore_model))       
         print("train_cls_data_path: [{}]".format(conf["train_cls_data_path"]))
         print("valid_cls_data_path: [{}]".format(conf["valid_cls_data_path"]))
         print("train_data_path: [{}]".format(conf["train_data_path"]))
         print("valid_data_path: [{}]".format(conf["valid_data_path"]))        
-        print("anomaly_data_path: [{}]".format(conf["anomaly_data_path"]))
+        print("anomaly_data_path: [{}]".format(conf["anomaly_data_path"]))            
         print("ckpt_name: [{}]".format(ckpt_name))
         print("max_iters: [{}]".format(max_iters))   
         print("learn_rate_init: [{}]".format(learn_rate_init))
     else:
         batch_size = 32
         print("*** [Testing] ***")
+        print("Dataset: [{}]".format(conf["dataset"]))
         print("test_data_path: [{}]".format(conf["test_data_path"]))
-
+    
+    print("anomaly_class: [{}]".format(anoCls))
     print("batch_size: [{}]".format(batch_size))   
     print("model_ticket: [{}]".format(model_ticket))   
     print("dropout: [{}]".format(dropout))
@@ -85,9 +90,12 @@ if __name__ == "__main__":
     
     if is_training == True:               
         
-        cb_ob = InputData(conf["train_data_path"], conf["valid_data_path"], conf["anomaly_data_path"], None)
-        #cb_ob = InputAllClassData(conf["anomaly_class"], conf["train_cls_data_path"], conf["valid_cls_data_path"], conf["anomaly_data_path"], None)
-
+        if conf["dataset"] != "MNIST":
+            cb_ob = InputData(conf["train_data_path"], conf["valid_data_path"], conf["anomaly_data_path"], None)
+        else:
+            cb_ob = InputMNISTData()
+            cb_ob.load_input_data(anoCls)
+            
         MODEL = model2( batch_size=batch_size, 
                         max_iters=max_iters, 
                         repeat=data_repeat,
@@ -97,6 +105,7 @@ if __name__ == "__main__":
                         log_dir=root_log_dir, 
                         output_dir=output_dir,
                         learnrate_init=learn_rate_init,
+                        dataset_name=dataset_name,
                         anoCls=anoCls,
                         ckpt_name=ckpt_name,
                         test_ckpt=test_ckpt,
@@ -112,12 +121,19 @@ if __name__ == "__main__":
 
     else:
         
-        test_data_path = conf["test_data_path"]
-        
+        if conf["dataset"] != "MNIST":
+            test_data_path = conf["test_data_path"]
+        else:
+            test_data_path = list(range(10))
+            
         for path in test_data_path:
-        
-            cb_ob = InputAllClassData(None, None, None, None, path)
-    
+            
+            if conf["dataset"] != "MNIST":
+                cb_ob = InputAllClassData(None, None, None, None, path)
+            else:
+                cb_ob = InputMNISTData()
+                cb_ob.load_test_data(path)
+                
             MODEL = model2( batch_size=batch_size, 
                             max_iters=max_iters, 
                             repeat=data_repeat,
@@ -127,6 +143,7 @@ if __name__ == "__main__":
                             log_dir=root_log_dir, 
                             output_dir=output_dir,
                             learnrate_init=learn_rate_init,
+                            dataset_name=dataset_name,
                             anoCls=anoCls,
                             ckpt_name=ckpt_name,
                             test_ckpt=test_ckpt,

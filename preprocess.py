@@ -23,6 +23,20 @@ def vertical_flip(data):
     
     return data_flip
 
+def rot90(data):
+    # image shape: [batch, 32, 32, 3]
+    
+    data.swapaxes(-3,-2)[..., ::-1, :]
+    
+    return data
+
+def rot270(data):
+    # image shape: [batch, 32, 32, 3]
+    
+    data.swapaxes(-3,-2)[...,::-1,:,:]
+    
+    return data
+
 def normalize(data, mean=[], std=[]):
     """
     Normalize a list of sample image data in the range of 0 to 1

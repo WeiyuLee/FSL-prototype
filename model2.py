@@ -23,7 +23,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 class model2(object):
 
     #build model
-    def __init__(self, batch_size, max_iters, repeat, dropout, model_path, data_ob, log_dir, output_dir, learnrate_init, anoCls,
+    def __init__(self, batch_size, max_iters, repeat, dropout, model_path, data_ob, log_dir, output_dir, learnrate_init, dataset_name, anoCls,
                  ckpt_name, test_ckpt, train_ckpt=[], restore_model=False, restore_step=0, class_num=10, model_ticket="none", lat_dim=128, is_training=True):
 
         self.batch_size = batch_size
@@ -35,6 +35,7 @@ class model2(object):
         self.log_dir = log_dir
         self.output_dir = output_dir
         self.learn_rate_init = learnrate_init
+        self.dataset_name = dataset_name
         self.anoCls = anoCls
         self.ckpt_name = ckpt_name
         self.test_ckpt = test_ckpt
@@ -48,7 +49,11 @@ class model2(object):
         self.lat_dim = lat_dim
         self.is_training = is_training
                 
-        self.channel = 3
+        if dataset_name == "MNIST":
+            self.channel = 1
+        else:
+            self.channel = 3
+            
         self.output_size = data_ob.image_size
         self.images = tf.placeholder(tf.float32, [self.batch_size, self.output_size, self.output_size, self.channel], name='input1')
         self.images2 = tf.placeholder(tf.float32, [self.batch_size, self.output_size, self.output_size, self.channel], name='input2')
@@ -67,20 +72,23 @@ class model2(object):
             ## Training set
             self.dataset = self.data_ob.train_data_list          
             #self.dataset = self.data_ob.train_data_dict         
-    
+            print("Training data shape: {}".format(self.dataset[0].shape))
+            
             ## Validation set
             self.valid_dataset = self.data_ob.valid_data_list
             #self.valid_dataset = self.data_ob.valid_data_dict
-
+            print("Validation data shape: {}".format(self.valid_dataset[0].shape))
+            
             ## Anomaly set
             self.anomaly_dataset = self.data_ob.anomaly_data_list
+            print("Anoamly data shape: {}".format(self.anomaly_dataset[0].shape))
             
         else:
             
             ## Testing set
             self.test_dataset = self.data_ob.test_data_list
             
-        self.model_list = ["AD_DISE", "AD_CLS_DISE", "AD_CLS_DISE2", "AD_CLS_DISE3", "AD_CLS_DISE4", "AD_CLS_DISE5", "AD_VAE_DISE", "AD_VAE_DISE2", "AD_VAE_DISE3", "AD_CLS_BASELINE"]
+        self.model_list = ["AD_DISE", "AD_CLS_DISE", "AD_CLS_DISE2", "AD_CLS_DISE3", "AD_CLS_DISE4", "AD_CLS_DISE5", "AD_VAE_DISE", "AD_VAE_DISE2", "AD_VAE_DISE3", "AD_VAE_BASELINE", "AD_CLS_BASELINE"]
 
     def build_model(self):###              
         if self.model_ticket not in self.model_list:
@@ -3835,7 +3843,7 @@ class model2(object):
     def build_AD_VAE_DISE3(self):
         
         # Initial model_zoo
-        mz = model_zoo.model_zoo(self.images, dropout=self.dropout, lat_dim=self.lat_dim, is_training=self.is_training, model_ticket=self.model_ticket)        
+        mz = model_zoo.model_zoo(self.images, dropout=self.dropout, lat_dim=self.lat_dim, channel=self.channel, is_training=self.is_training, model_ticket=self.model_ticket)        
         
         ### Build model              
         # Autoencoder ============================================================================================================
@@ -3845,7 +3853,7 @@ class model2(object):
         self.z1_softmax = tf.nn.softmax(self.z1)    
 
         # Code
-        self.f_labels = tf.manip.roll(self.labels, tf.random_uniform(shape=[1], minval=1, maxval=10, dtype=tf.int32), axis=[1])
+        #self.f_labels = tf.manip.roll(self.labels, tf.random_uniform(shape=[1], minval=1, maxval=10, dtype=tf.int32), axis=[1])
         self.t_code = tf.concat([self.z1_softmax, self.z2], -1)
         self.zt_code = tf.concat([self.labels, self.z2], -1)
         #self.zf_code = tf.concat([self.f_labels, self.z2], -1)
@@ -3858,8 +3866,11 @@ class model2(object):
         self.z2_2nd = self.en_mu_2nd + tf.exp(0.5*self.en_sigma_2nd) * tf.random_normal(tf.shape(self.en_mu_2nd), dtype=tf.float32)      
         
         # Noise input ============================================================================================================
+        #self.n_z1 = tf.manip.roll(self.labels, tf.random_uniform(shape=[1], minval=1, maxval=10, dtype=tf.int32), axis=[1])
+        self.n_z1 = self.labels
         self.n_z2 = tf.random_normal(tf.shape(self.z2), dtype=tf.float32)
-        self.zn_code = tf.concat([self.labels, self.n_z2], -1)
+        #self.zn_code = tf.concat([self.labels, self.n_z2], -1)
+        self.zn_code = tf.concat([self.n_z1, self.n_z2], -1)
         
         # Decoder
         self.n_decoder_output = mz.build_model({"mode":"decoder", "code":self.zn_code, "reuse":True})      
@@ -3867,6 +3878,9 @@ class model2(object):
         # Encoder
         self.f_n_z1, self.n_en_mu, self.n_en_sigma = mz.build_model({"mode":"encoder", "en_input":self.n_decoder_output, "reuse":True})        
         self.f_n_z2 = self.n_en_mu + tf.exp(0.5*self.n_en_sigma) * tf.random_normal(tf.shape(self.n_en_mu), dtype=tf.float32)
+        
+        self.f_n_z1_softmax = tf.nn.softmax(self.f_n_z1)    
+        self.zn_code_2 = tf.concat([self.f_n_z1_softmax, self.f_n_z2], -1)
         
         # WGAN =============================================================================================================   
         self.dis_t_inputs = (self.images, self.zt_code)     
@@ -3879,7 +3893,8 @@ class model2(object):
         self.dis_f_image = tf.concat([self.dis_f_image_1, self.dis_f_image_2], 0)
 
         self.dis_f_code_1 = tf.gather(self.t_code, sample_idx_1)
-        self.dis_f_code_2 = tf.gather(self.zn_code, sample_idx_2)
+        #self.dis_f_code_2 = tf.gather(self.zn_code, sample_idx_2)
+        self.dis_f_code_2 = tf.gather(self.zn_code_2, sample_idx_2)
         self.dis_f_code = tf.concat([self.dis_f_code_1, self.dis_f_code_2], 0)     
 
         self.dis_f_inputs = (self.dis_f_image, self.dis_f_code)  
@@ -3908,12 +3923,12 @@ class model2(object):
         # Loss ==================================================================================================================
         self.content_loss = tf.reduce_mean(tf.abs(self.decoder_output - self.images))      
         self.code_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.z1, labels=self.labels))
-        self.dise_loss = tf.reduce_mean(tf.abs(self.n_z2 - self.f_n_z2)) + tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.f_n_z1, labels=self.labels))
-        self.KL_div = (-0.5 * tf.reduce_sum(1 + self.en_sigma - tf.pow(self.en_mu, 2) - tf.exp(self.en_sigma)))# / (self.batch_size*self.lat_dim)
+        self.dise_loss = tf.reduce_mean(tf.abs(self.n_z2 - self.f_n_z2)) + tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.f_n_z1, labels=self.n_z1))
+        self.KL_div = (-0.5 * tf.reduce_sum(1 + self.en_sigma - tf.pow(self.en_mu, 2) - tf.exp(self.en_sigma))) / 3072
 
         self.encode_loss_2nd = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.z1_2nd, labels=self.z1_softmax))
         
-        self.g_loss = 50*self.content_loss + 1e-3*self.KL_div + (1 * self.code_loss) + (1 * self.adv_weight * self.dise_loss) + (1 * self.adv_weight * disc_fake_loss)
+        self.g_loss = 50*self.content_loss + 0.1*self.KL_div + (10 * self.code_loss) + (1 * self.adv_weight * self.dise_loss) + (1 * self.adv_weight * disc_fake_loss)
         self.d_loss = -(disc_fake_loss - disc_ture_loss) + d_gp                                   
                 
         # ========================================================================================================================        
@@ -3997,7 +4012,7 @@ class model2(object):
     def build_eval_AD_VAE_DISE3(self):
 
         # Initial model_zoo
-        mz = model_zoo.model_zoo(self.images, dropout=self.dropout, lat_dim=self.lat_dim, is_training=self.is_training, model_ticket=self.model_ticket)        
+        mz = model_zoo.model_zoo(self.images, dropout=self.dropout, lat_dim=self.lat_dim, channel=self.channel, is_training=self.is_training, model_ticket=self.model_ticket)        
         
         # Autoencoder ============================================================================================================
         # Forward ================================================================================================================
@@ -4161,9 +4176,14 @@ class model2(object):
             sess.run(init)
             print("Restore model: {}".format(self.test_ckpt))
             self.saver.restore(sess, self.test_ckpt)            
-
-            output_basename = os.path.basename(self.data_ob.test_images_path)
-            output_path = os.path.join(self.output_dir, os.path.splitext(output_basename)[0])
+            
+            if self.data_ob.test_images_path != None:
+                output_basename = os.path.basename(self.data_ob.test_images_path)
+                output_path = os.path.join(self.output_dir, os.path.splitext(output_basename)[0])
+            else:
+                output_basename = "pr_test_class_{}".format(self.data_ob.anoCls)
+                output_path = os.path.join(self.output_dir, output_basename)
+                
             output_dise_path = os.path.join(output_path, 'Disentanglement')
             
             input_class = int(os.path.splitext(output_basename)[0].split(sep='_')[-1])
@@ -4187,7 +4207,7 @@ class model2(object):
                 output_t_decode_image = []                
                 output_decode_image = []
                 output_encode_image = []
-                output_ano_score = np.empty((0, 22))
+                output_ano_score = np.empty((0, 1+10+self.lat_dim+1))
                 
                 z1_src = np.zeros(10)
                 z1_src[i] = 1
@@ -4223,12 +4243,12 @@ class model2(object):
                                             self.dropout_rate: 0,
                                             self.z1_src: z1_src,
                                        }                        
-                        ano_score, z1_softmax, z1_2nd_softmax, t_decoder_output, content_loss = sess.run([self.anomaly_score, self.z1_softmax, self.z1_2nd_softmax, self.t_decoder_output, self.content_loss], feed_dict=fd_ano_score)                   
+                        ano_score, z1_softmax, z2, t_decoder_output, content_loss = sess.run([self.anomaly_score, self.z1_softmax, self.z2, self.t_decoder_output, self.content_loss], feed_dict=fd_ano_score)                   
                         t_decoder_output = np.squeeze(np.array(t_decoder_output))
                         ano_score = np.expand_dims(ano_score, axis=-1) 
                         content_loss = np.expand_dims(content_loss, axis=-1) 
 
-                        output_ano_score = np.append(output_ano_score, np.hstack((ano_score, z1_softmax, z1_2nd_softmax, content_loss)), axis=0)
+                        output_ano_score = np.append(output_ano_score, np.hstack((ano_score, z1_softmax, z2, content_loss)), axis=0)
                         
                         if curr_idx <= 256:
                             if output_t_decode_image == []:
@@ -4267,6 +4287,256 @@ class model2(object):
                     np.savetxt(os.path.join(output_path, ano_score_output_name), output_ano_score, delimiter=",")
                 
                 img_output(output_decode_image, os.path.join(output_dise_path, decode_output_name))  
+
+    def build_AD_VAE_BASELINE(self):
+        
+        # Initial model_zoo
+        mz = model_zoo.model_zoo(self.images, dropout=self.dropout, lat_dim=self.lat_dim, channel=self.channel, is_training=self.is_training, model_ticket=self.model_ticket)        
+        
+        ### Build model              
+        # Autoencoder ============================================================================================================
+        # Encoder
+        self.en_mu, self.en_sigma = mz.build_model({"mode":"encoder", "en_input":self.images, "reuse":False})        
+        self.z = self.en_mu + tf.exp(0.5*self.en_sigma) * tf.random_normal(tf.shape(self.en_mu), dtype=tf.float32)
+        
+        # Decoder        
+        self.decoder_output = mz.build_model({"mode":"decoder", "code":self.z, "reuse":False})      
+               
+        # Loss ==================================================================================================================
+        self.content_loss = tf.reduce_mean(tf.abs(self.decoder_output - self.images))      
+        self.KL_div = (-0.5 * tf.reduce_sum(1 + self.en_sigma - tf.pow(self.en_mu, 2) - tf.exp(self.en_sigma))) / 3072
+       
+        self.loss = 50*self.content_loss + 0.1*self.KL_div
+               
+        # ========================================================================================================================        
+        
+        MSE = tf.reduce_mean(tf.squared_difference(self.decoder_output, self.images))    
+        PSNR = tf.constant(255**2,dtype=tf.float32)/MSE
+        PSNR = tf.constant(10,dtype=tf.float32)*log10(PSNR)
+        
+        train_variables = tf.trainable_variables()       
+        var = [v for v in train_variables if v.name.startswith(("encoder", "decoder"))]
+        
+        self.train_opt = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.9).minimize(self.loss, var_list=var)
+        
+        with tf.name_scope('train_summary'):
+
+            tf.summary.scalar("loss", self.loss, collections=['train'])           
+                        
+            tf.summary.scalar("MSE", MSE, collections=['train'])
+            tf.summary.scalar("PSNR", PSNR, collections=['train'])
+            
+            tf.summary.scalar("content_loss", self.content_loss, collections=['train'])
+            tf.summary.scalar("KL_div", self.KL_div, collections=['train'])
+            
+            tf.summary.image("input_image", self.images, collections=['train'])
+            tf.summary.image("output_image", self.decoder_output, collections=['train']) 
+            
+            self.merged_summary_train = tf.summary.merge_all('train')          
+
+        with tf.name_scope('test_summary'):
+            
+            tf.summary.scalar("loss", self.loss, collections=['test'])           
+           
+            tf.summary.scalar("MSE", MSE, collections=['test'])
+            tf.summary.scalar("PSNR", PSNR, collections=['test'])            
+            
+            tf.summary.scalar("content_loss", self.content_loss, collections=['test'])
+            tf.summary.scalar("KL_div", self.KL_div, collections=['test'])
+            
+            tf.summary.image("input_image", self.images, collections=['test'])
+            tf.summary.image("output_image", self.decoder_output, collections=['test']) 
+            
+            self.merged_summary_test = tf.summary.merge_all('test')          
+
+        with tf.name_scope('anomaly_summary'):
+            
+            tf.summary.scalar("loss", self.loss, collections=['anomaly'])           
+                            
+            tf.summary.scalar("MSE", MSE, collections=['anomaly'])
+            tf.summary.scalar("PSNR", PSNR, collections=['anomaly'])
+            
+            tf.summary.scalar("content_loss", self.content_loss, collections=['anomaly'])
+            tf.summary.scalar("KL_div", self.KL_div, collections=['anomaly'])
+            
+            tf.summary.image("input_image", self.images, collections=['anomaly'])
+            tf.summary.image("output_image", self.decoder_output, collections=['anomaly']) 
+            
+            self.merged_summary_anomaly = tf.summary.merge_all('anomaly')          
+        
+        self.saver = tf.train.Saver()
+        self.best_saver = tf.train.Saver()                    
+
+    def build_eval_AD_VAE_BASELINE(self):
+
+        # Initial model_zoo
+        mz = model_zoo.model_zoo(self.images, dropout=self.dropout, lat_dim=self.lat_dim, channel=self.channel, is_training=self.is_training, model_ticket=self.model_ticket)        
+        
+        # Autoencoder ============================================================================================================
+        # Forward ================================================================================================================
+        # Encoder
+        self.en_mu, self.en_sigma = mz.build_model({"mode":"encoder", "en_input":self.images, "reuse":False})        
+        self.z = self.en_mu + tf.exp(0.5*self.en_sigma) * tf.random_normal(tf.shape(self.en_mu), dtype=tf.float32)
+        
+        # Decoder        
+        self.decoder_output = mz.build_model({"mode":"decoder", "code":self.z, "reuse":False})      
+        
+        self.content_loss = tf.reduce_mean(tf.abs(self.decoder_output - self.images), axis=[1,2,3])
+        
+        self.saver = tf.train.Saver()
+                
+    def train_AD_VAE_BASELINE(self):
+        
+        new_learning_rate = self.learn_rate_init
+              
+        init = tf.global_variables_initializer()
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+
+        best_loss = 1000
+
+        with tf.Session(config=config) as sess:
+
+            sess.run(init)
+
+            summary_writer = tf.summary.FileWriter(self.log_dir, sess.graph)
+
+            if self.restore_model == True:
+                print("Restore model: {}".format(self.train_ckpt))
+                self.saver.restore(sess, self.train_ckpt)
+                start_step = self.restore_step                
+                
+            else:
+                start_step = 0
+            
+            epoch_pbar = tqdm(range(start_step, self.max_iters+1))
+            for step in epoch_pbar:   
+                
+                new_learning_rate = self.get_lr(step)
+                
+                # Get the training batch
+                next_x_images, next_y = get_batch(self.dataset, self.batch_size)
+                    
+                fd = {
+                        self.images: next_x_images, 
+                        self.labels: next_y, 
+                        self.dropout_rate: self.dropout,
+                        self.lr: new_learning_rate,
+                     }
+
+                # Training VAE                
+                sess.run([self.train_opt], feed_dict=fd) 
+                    
+                # Record
+                if step%200 == 0:
+
+                    # Training set
+                    train_sum, train_loss = sess.run([self.merged_summary_train, self.loss], feed_dict=fd)
+
+                    next_valid_x_images, next_valid_y = get_batch(self.valid_dataset, self.batch_size)
+
+                    fd_test = {
+                                self.images: next_valid_x_images, 
+                                self.labels: next_valid_y, 
+                                self.dropout_rate: 0,
+                              }
+                                           
+                    test_sum, test_loss = sess.run([self.merged_summary_test, self.loss], feed_dict=fd_test)  
+
+                    next_ano_x_images, next_ano_y = get_batch(self.anomaly_dataset, self.batch_size)
+                    
+                    fd_test = {
+                                self.images: next_ano_x_images, 
+                                self.labels: next_ano_y, 
+                                self.dropout_rate: 0,
+                              }
+                                               
+                    ano_sum, ano_loss = sess.run([self.merged_summary_anomaly, self.loss], feed_dict=fd_test) 
+                      
+                    print("[%s] Step %d: LR = [%.7f], Train loss = [%.7f], Test loss = [%.7f], Anomaly loss = [%.7f]" % (self.ckpt_name, step, new_learning_rate, train_loss, test_loss, ano_loss))
+                    
+                    summary_writer.add_summary(train_sum, step)                   
+                    summary_writer.add_summary(test_sum, step)                   
+                    summary_writer.add_summary(ano_sum, step)         
+
+                    if abs(best_loss) < abs(test_loss) and step > 10000:
+                        
+                        best_loss = test_loss
+                        
+                        ckpt_path = os.path.join(self.saved_model_path, 'best_performance', self.ckpt_name + '_%.4f' % (best_loss))
+                        print("* Save ckpt: {}, Test loss: {}".format(ckpt_path, best_loss))
+                        self.best_saver.save(sess, ckpt_path, global_step=step)
+
+                if np.mod(step , 2000) == 0 and step != 0:
+
+                    self.saver.save(sess, os.path.join(self.saved_model_path, self.ckpt_name), global_step=step)
+
+                step += 1
+
+            save_path = self.saver.save(sess , self.saved_model_path)
+            print("Model saved in file: %s" % save_path)
+            print("Best loss: {}".format(best_loss))
+
+    def test_AD_VAE_BASELINE(self):
+
+        init = tf.global_variables_initializer()
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+
+        with tf.Session(config=config) as sess:
+           
+            # Initialzie the iterator
+            #sess.run(self.testing_init_op)
+
+            sess.run(init)
+            print("Restore model: {}".format(self.test_ckpt))
+            self.saver.restore(sess, self.test_ckpt)            
+
+            output_basename = os.path.basename(self.data_ob.test_images_path)
+            output_path = os.path.join(self.output_dir, os.path.splitext(output_basename)[0])
+            
+            input_class = int(os.path.splitext(output_basename)[0].split(sep='_')[-1])
+            print("Current input class: {}".format(input_class))
+            
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+      
+            ano_score_output_name = os.path.splitext(output_basename)[0] + "_ano_score.csv"
+                           
+            print("Output: {}".format(ano_score_output_name))
+
+            output_ano_score = np.empty((0, 256+1))
+            
+            curr_idx = 0
+            while True:
+                
+                try:
+                    
+                    if curr_idx >= len(self.test_dataset[0]):
+                        break
+                    
+                    next_x_images = self.test_dataset[0][curr_idx:curr_idx+self.batch_size]
+                    next_test_y = self.test_dataset[1][curr_idx:curr_idx+self.batch_size]
+                    curr_idx = curr_idx + self.batch_size
+                    
+                    if len(next_x_images) < self.batch_size:
+                        break
+                    
+                except tf.errors.OutOfRangeError:
+                    break
+                
+                    
+                fd_ano_score = {
+                                    self.images: next_x_images, 
+                                    self.labels: next_test_y, 
+                                    self.dropout_rate: 0,
+                               }                        
+                
+                z, content_loss = sess.run([self.z, self.content_loss], feed_dict=fd_ano_score)                   
+                content_loss = np.expand_dims(content_loss, axis=-1) 
+                output_ano_score = np.append(output_ano_score, np.hstack((z, content_loss)), axis=0)
+                
+            np.savetxt(os.path.join(output_path, ano_score_output_name), output_ano_score, delimiter=",")
                     
     def build_AD_CLS_BASELINE(self):
         

@@ -101,8 +101,10 @@ def preprocess_and_save_data(cifar10_dataset_folder_path, output_path, rm_class,
     if aug_enable==True:
         features_ud = preprc.vertical_flip(features)
         features_lr = preprc.horizontal_flip(features)
-        features = np.concatenate((features, features_ud, features_lr))
-        labels = np.concatenate((labels, labels, labels))
+        features_rot90 = preprc.rot90(features)
+        features_rot270 = preprc.rot270(features)
+        features = np.concatenate((features, features_ud, features_lr, features_rot90, features_rot270))
+        labels = np.concatenate((labels, labels, labels, labels, labels))
 
     if reshape_enable==True:
         features = preprc.reshape_image(features, (64, 64, 3))    
@@ -190,8 +192,10 @@ def preprocess_and_save_single_class_data(cifar10_dataset_folder_path, output_pa
     if aug_enable==True:
         features_ud = preprc.vertical_flip(features)
         features_lr = preprc.horizontal_flip(features)
-        features = np.concatenate((features, features_ud, features_lr))
-        labels = np.concatenate((labels, labels, labels))
+        features_rot90 = preprc.rot90(features)
+        features_rot270 = preprc.rot270(features)
+        features = np.concatenate((features, features_ud, features_lr, features_rot90, features_rot270))
+        labels = np.concatenate((labels, labels, labels, labels, labels))
 
     if reshape_enable==True:
         features = preprc.reshape_image(features, (64, 64, 3)) 
@@ -291,8 +295,8 @@ def display_image_predictions(features, labels, predictions):
 
 cifar10_dataset_folder_path = "/data/wei/dataset/FSL/Cifar-10/cifar-10-batches-py"
 tar_gz_path = "/data/wei/dataset/FSL/Cifar-10/cifar-10-python.tar.gz"
-single_class_output_path = "/data/wei/dataset/FSL/Cifar-10/pr_single_class_aug/"
-all_class_output_path = "/data/wei/dataset/FSL/Cifar-10/preprocessed_aug/"
+single_class_output_path = "/data/wei/dataset/FSL/Cifar-10/pr_single_class_aug/temp/"
+all_class_output_path = "/data/wei/dataset/FSL/Cifar-10/preprocessed_aug/temp/"
 
 # Download the CIFAR-10 dataset if not exist.
 DL.process(cifar10_dataset_folder_path, tar_gz_path)
